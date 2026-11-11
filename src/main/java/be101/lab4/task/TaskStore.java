@@ -24,6 +24,13 @@ public class TaskStore {
                 .toList();
     }
 
+    /** Вернуть хранилище к исходному состоянию (используется тестами). */
+    public void reset() {
+        store.clear();
+        store.put("1", new Task("1", "Полить цветы", true, "Дом"));
+        store.put("2", new Task("2", "Ревью PR", false, "Работа"));
+    }
+
     public Optional<Task> findById(String id) {
         return Optional.ofNullable(store.get(id));
     }
