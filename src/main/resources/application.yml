@@ -1,0 +1,22 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: be-101-lab-2
+  datasource:
+    url: jdbc:h2:mem:tasks
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      # для лабы: схема создаётся при старте и умирает с приложением.
+      # в бою — миграции (Liquibase), а не create-drop (урок 5)
+      ddl-auto: create-drop
+    open-in-view: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
