@@ -5,7 +5,7 @@ module: 1
 order: 4
 lab:
   title: Лаба 1. Контроллер
-  description: Дописать REST-контроллер магазина по TODO-меткам: DTO, Lombok, MapStruct-маппер. Без автотестов — сделал и сравнил со студенческим эталоном в ветке решения.
+  description: "Дописать REST-контроллер магазина по TODO-меткам: DTO, Lombok, MapStruct-маппер. Без автотестов — сделал и сравнил со студенческим эталоном в ветке решения."
   branch: lab-1
   branchSolution: lab-1-solution
 ---
