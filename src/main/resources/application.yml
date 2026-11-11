@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: be-101-lab-5
+  datasource:
+    url: jdbc:h2:mem:lab5
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      # схема создаётся ТОЛЬКО Liquibase; соответствие entity проверяют тесты
+      ddl-auto: none
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
