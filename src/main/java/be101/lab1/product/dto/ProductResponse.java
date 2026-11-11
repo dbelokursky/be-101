@@ -1,8 +1,13 @@
 package be101.lab1.product.dto;
 
+import java.math.BigDecimal;
+
 /**
- * TODO 1: DTO ответа. Поля (по заданию в README):
- *   Long id, String title, java.math.BigDecimal price
+ * DTO ответа: только то, что входит в контракт API.
  */
-public record ProductResponse() {
+public record ProductResponse(
+        Long id,
+        String title,
+        BigDecimal price
+) {
 }

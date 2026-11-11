@@ -14,8 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * TODO 4: допиши эндпоинты по заданию в README.
- * Проект компилируется, но пока все методы возвращают null — приложение «работает впустую».
+ * Тонкий контроллер: принять → отдать сервису → вернуть DTO.
  */
 @RestController
 @RequestMapping("/api/products")
@@ -31,17 +30,23 @@ public class ProductController {
 
     @GetMapping
     public List<ProductResponse> findAll() {
-        return null; // TODO: список всех продуктов как ProductResponse
+        return productService.findAll().stream()
+                .map(productMapper::toResponse)
+                .toList();
     }
 
     @GetMapping("/{id}")
     public ProductResponse findById(@PathVariable Long id) {
-        return null; // TODO: продукт по id; если нет — кинуть ProductNotFoundException
+        return productService.findById(id)
+                .map(productMapper::toResponse)
+                .orElseThrow(() -> new ProductNotFoundException(id));
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED) // TODO 5: проверь, что POST действительно отвечает 201
+    @ResponseStatus(HttpStatus.CREATED)
     public ProductResponse create(@RequestBody CreateProductRequest request) {
-        return null; // TODO: request -> Product (маппер) -> сохранить -> ProductResponse
+        Product product = productMapper.toProduct(request);
+        Product saved = productService.save(product);
+        return productMapper.toResponse(saved);
     }
 }

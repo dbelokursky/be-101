@@ -1,8 +1,12 @@
 package be101.lab1.product.dto;
 
+import java.math.BigDecimal;
+
 /**
- * TODO 2: DTO запроса на создание. Поля (по заданию в README):
- *   String title, java.math.BigDecimal price
+ * DTO запроса на создание: то, что присылает клиент.
  */
-public record CreateProductRequest() {
+public record CreateProductRequest(
+        String title,
+        BigDecimal price
+) {
 }
