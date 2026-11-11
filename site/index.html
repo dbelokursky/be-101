@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BE-101 — Бэкенд для смежных специальностей</title>
+<style>
+/* BE-101 — стили курса */
+
+:root {
+  --bg: #f6f7f9;
+  --paper: #ffffff;
+  --ink: #1f2430;
+  --ink-soft: #5b6472;
+  --line: #e3e6eb;
+  --accent: #3556e0;
+  --accent-soft: #eef1fe;
+  --ok: #1a8a4a;
+  --ok-soft: #e7f6ed;
+  --fail: #d64545;
+  --fail-soft: #fdecec;
+  --code-bg: #1e2430;
+  --code-ink: #e8ecf3;
+  --radius: 10px;
+  --sidebar-w: 300px;
+  --content-w: 780px;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.65;
+  font-size: 16px;
+}
+
+#app { display: flex; min-height: 100vh; }
+
+/* ---------- сайдбар ---------- */
+
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--paper);
+  border-right: 1px solid var(--line);
+  padding: 28px 22px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.brand-title { font-size: 22px; font-weight: 800; letter-spacing: .3px; }
+.brand-sub { font-size: 12.5px; color: var(--ink-soft); margin-top: 2px; }
+
+.module-progress { margin: 22px 0 18px; }
+.module-progress-label { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 6px; }
+.module-progress-bar {
+  height: 8px; border-radius: 99px; background: var(--line); overflow: hidden;
+}
+.module-progress-fill {
+  height: 100%; width: 0;
+  background: linear-gradient(90deg, var(--accent), #7c94f0);
+  border-radius: 99px;
+  transition: width .4s ease;
+}
+
+.lesson-list { display: flex; flex-direction: column; gap: 4px; }
+.lesson-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 8px;
+  color: var(--ink); text-decoration: none; font-size: 14px;
+  border: 1px solid transparent;
+}
+.lesson-item:hover { background: var(--bg); }
+.lesson-item.active { background: var(--accent-soft); border-color: #d5dcfb; font-weight: 600; }
+.lesson-status {
+  width: 22px; height: 22px; flex-shrink: 0;
+  border-radius: 50%; border: 1.6px solid var(--line);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 12px; color: transparent;
+}
+.lesson-status.done {
+  background: var(--ok); border-color: var(--ok); color: #fff;
+}
+.lesson-title { flex: 1; }
+
+.sidebar-footer {
+  margin-top: 26px; font-size: 11.5px; color: var(--ink-soft);
+  border-top: 1px solid var(--line); padding-top: 14px;
+}
+
+/* ---------- контент ---------- */
+
+.content {
+  flex: 1;
+  padding: 40px 48px 90px;
+  display: flex;
+  justify-content: center;
+}
+
+.lesson { max-width: var(--content-w); width: 100%; }
+
+.lesson h1 {
+  font-size: 30px; line-height: 1.25; margin: 0 0 6px;
+  letter-spacing: -.3px;
+}
+.lesson h2 {
+  font-size: 21px; margin: 38px 0 12px;
+  padding-top: 10px; border-top: 1px solid var(--line);
+}
+.lesson h3 { font-size: 17px; margin: 26px 0 8px; }
+
+.lesson p { margin: 12px 0; }
+.lesson ul, .lesson ol { padding-left: 24px; margin: 12px 0; }
+.lesson li { margin: 5px 0; }
+
+.lesson a { color: var(--accent); }
+
+.lesson blockquote {
+  margin: 18px 0; padding: 12px 18px;
+  background: var(--accent-soft);
+  border-left: 4px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  color: #2c3350;
+}
+.lesson blockquote p { margin: 4px 0; }
+
+.lesson table {
+  border-collapse: collapse; width: 100%; margin: 16px 0;
+  font-size: 14.5px; background: var(--paper);
+}
+.lesson th, .lesson td {
+  border: 1px solid var(--line); padding: 8px 12px; text-align: left;
+  vertical-align: top;
+}
+.lesson th { background: var(--bg); font-weight: 600; }
+
+.lesson code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: .88em;
+  background: #eceff3; padding: 2px 6px; border-radius: 5px;
+}
+
+.lesson pre {
+  background: var(--code-bg); color: var(--code-ink);
+  border-radius: var(--radius);
+  padding: 16px 18px; overflow-x: auto;
+  font-size: 13.5px; line-height: 1.55;
+  margin: 16px 0;
+}
+.lesson pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+
+/* mermaid */
+.mermaid {
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 14px; margin: 18px 0;
+  display: flex; justify-content: center; overflow-x: auto;
+}
+
+/* ---------- квиз ---------- */
+
+.quiz {
+  margin: 34px 0 10px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 22px 24px;
+  box-shadow: 0 1px 3px rgba(31, 36, 48, .05);
+}
+
+.quiz-head {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.quiz-badge {
+  background: var(--accent); color: #fff;
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .8px; padding: 4px 10px; border-radius: 6px;
+}
+.quiz-hint { font-size: 12.5px; color: var(--ink-soft); }
+.quiz-passed-badge {
+  color: var(--ok); font-weight: 700; font-size: 13px;
+}
+
+.question {
+  border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 16px 18px; margin: 14px 0;
+  background: #fbfcfe;
+}
+.question.ok { border-color: #bfe6cd; background: var(--ok-soft); }
+.question.fail { border-color: #f2c6c6; background: var(--fail-soft); }
+
+.question-head {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+}
+.question-num {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent);
+  font-weight: 700; font-size: 13px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.question-type { font-size: 11.5px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .5px; }
+
+.question-text { font-weight: 600; margin: 4px 0 12px; }
+
+.question-code {
+  background: var(--code-bg); color: var(--code-ink);
+  border-radius: 8px; padding: 12px 14px; overflow-x: auto;
+  font-size: 13px; margin: 10px 0;
+}
+.question-code code { background: none; padding: 0; color: inherit; }
+
+.question-area { display: flex; flex-direction: column; gap: 8px; }
+
+.option {
+  display: block; width: 100%; text-align: left;
+  background: var(--paper); border: 1.5px solid var(--line);
+  border-radius: 8px; padding: 10px 14px;
+  font-size: 14.5px; font-family: inherit; color: var(--ink);
+  cursor: pointer; transition: border-color .12s, background .12s;
+}
+.option:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); }
+.option.correct { border-color: var(--ok); background: var(--ok-soft); }
+.option.wrong { border-color: var(--fail); background: var(--fail-soft); }
+.option:disabled { cursor: default; opacity: .92; }
+
+.option.check { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.option.check input { width: 17px; height: 17px; accent-color: var(--accent); }
+
+.locked .option { pointer-events: none; }
+
+.btn {
+  background: var(--accent); color: #fff; border: none;
+  border-radius: 8px; padding: 10px 20px;
+  font-size: 14.5px; font-weight: 600; font-family: inherit;
+  cursor: pointer;
+}
+.btn:hover { filter: brightness(1.08); }
+.btn.small { padding: 8px 16px; font-size: 13.5px; align-self: flex-start; }
+
+.blank-row { display: flex; gap: 10px; }
+.blank-input {
+  flex: 1; max-width: 420px;
+  border: 1.5px solid var(--line); border-radius: 8px;
+  padding: 9px 14px; font-size: 14.5px; font-family: inherit;
+}
+.blank-input:focus { outline: none; border-color: var(--accent); }
+.blank-input.correct { border-color: var(--ok); background: var(--ok-soft); }
+.blank-input.wrong { border-color: var(--fail); background: var(--fail-soft); }
+
+.match-row {
+  display: grid; grid-template-columns: 1fr 1.6fr; gap: 10px;
+  align-items: center;
+}
+.match-left { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 700; }
+.match-select {
+  border: 1.5px solid var(--line); border-radius: 8px;
+  padding: 8px 10px; font-size: 14px; font-family: inherit;
+  background: var(--paper); color: var(--ink);
+}
+.match-select.correct { border-color: var(--ok); background: var(--ok-soft); }
+.match-select.wrong { border-color: var(--fail); background: var(--fail-soft); }
+
+.question-feedback {
+  margin-top: 12px; border-radius: 8px; padding: 10px 14px; font-size: 14px;
+}
+.question-feedback.ok { background: var(--ok-soft); color: #14532d; }
+.question-feedback.fail { background: var(--fail-soft); color: #7f1d1d; }
+.question-expl { margin-top: 4px; }
+.correct-answer { margin-top: 6px; }
+
+.quiz-result { display: none; margin-top: 18px; }
+.quiz-result.show { display: block; }
+.quiz-result.ok .quiz-score { color: var(--ok); }
+.quiz-result.fail .quiz-score { color: var(--fail); }
+.quiz-score { font-size: 18px; font-weight: 700; }
+.quiz-note { color: var(--ink-soft); font-size: 14px; margin: 6px 0 12px; }
+
+/* ---------- лаба ---------- */
+
+.lab-card {
+  margin: 34px 0 10px;
+  border: 1.5px dashed #c9b458;
+  background: #fffdf3;
+  border-radius: 14px; padding: 20px 22px;
+}
+.lab-head { font-weight: 700; font-size: 16px; margin-bottom: 8px; }
+.lab-badge {
+  background: #b78a12; color: #fff; font-size: 11.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .8px;
+  padding: 3px 9px; border-radius: 6px; margin-right: 6px;
+}
+.lab-desc { margin: 6px 0; font-size: 14.5px; }
+.lab-branches { font-size: 13.5px; color: var(--ink-soft); margin: 8px 0; }
+.lab-check {
+  display: inline-flex; align-items: center; gap: 9px;
+  margin-top: 10px; cursor: pointer; font-size: 14.5px; font-weight: 600;
+  background: var(--paper); border: 1.5px solid var(--line);
+  padding: 8px 14px; border-radius: 8px;
+}
+.lab-check input { width: 17px; height: 17px; accent-color: var(--ok); }
+
+/* ---------- прочее ---------- */
+
+.empty { padding: 60px; text-align: center; color: var(--ink-soft); }
+
+@media (max-width: 920px) {
+  #app { flex-direction: column; }
+  .sidebar {
+    width: 100%; height: auto; position: static;
+    border-right: none; border-bottom: 1px solid var(--line);
+  }
+  .content { padding: 26px 18px 70px; }
+}
+
+</style>
+</head>
+<body>
+<noscript>Для работы курса нужен включённый JavaScript.</noscript>
+<div id="app"></div>
+<script src="mermaid.min.js"></script>
+<script>
+window.BE101 = {"lessons":[{"id":"lesson-01","title":"Клиент–сервер и HTTP","module":1,"order":1,"lab":null,"html":"\u003ch1>Урок 1. Клиент–сервер и HTTP\u003c/h1>\n\u003cp>Каждый раз, когда ты открываешь страницу интернет-магазина, ставишь лайк или жмёшь «Оформить заказ», между твоим браузером и чьим-то сервером происходит короткий строгий разговор. Он называется \u003cstrong>HTTP\u003c/strong> — и это язык, на котором фронтенд говорит с бэкендом.\u003c/p>\n\u003cp>Этот язык знает каждый участник продуктовой команды — но часто «на слух». К концу урока ты будешь понимать его структуру: из чего состоит запрос, что отвечает сервер и почему «404» — это не всегда баг.\u003c/p>\n\u003ch2>Клиент и сервер\u003c/h2>\n\u003cp>Всё общение в вебе строится по модели \u003cstrong>клиент–сервер\u003c/strong>:\u003c/p>\n\u003cul>\n\u003cli>\u003cstrong>Клиент\u003c/strong> — та программа, которая \u003cem>просит\u003c/em>: браузер, мобильное приложение, Postman, скрипт.\u003c/li>\n\u003cli>\u003cstrong>Сервер\u003c/strong> — программа, которая \u003cem>отвечает\u003c/em>: принимает запрос, что-то делает (считает, ходит в базу) и возвращает ответ.\u003c/li>\n\u003c/ul>\n\u003cp>Сервер не «толкает» данные сам по себе (по крайней мере, в базовом HTTP): он сидит и ждёт запросов. Клиент всегда начинает разговор первым.\u003c/p>\n\u003cdiv class=\"mermaid\">sequenceDiagram\n    participant C as Браузер (клиент)\n    participant S as Сервер (бэкенд)\n    C-&gt;&gt;S: GET /api/products — HTTP-запрос\n    Note over S: достаёт товары из базы\n    S--&gt;&gt;C: 200 OK + JSON со списком — HTTP-ответ\n    C-&gt;&gt;S: POST /api/orders — новый заказ\n    S--&gt;&gt;C: 201 Created + созданный заказ\u003c/div>\u003cblockquote>\n\u003cp>\u003cstrong>💡 Фронтендерам:\u003c/strong> вы делаете это десятки раз в день — каждый \u003ccode>fetch()\u003c/code> / \u003ccode>axios.get()\u003c/code> в вашем коде и есть «клиент начинает разговор». Бэкенд — та сторона, которая отвечает.\u003c/p>\n\u003c/blockquote>\n\u003cblockquote>\n\u003cp>\u003cstrong>🔧 QA-инженерам:\u003c/strong> в Postman или DevTools → Network вы видите эти разговоры вживую. Этот урок — про структуру того, что вы там видите.\u003c/p>\n\u003c/blockquote>\n\u003cblockquote>\n\u003cp>\u003cstrong>📐 Аналитикам:\u003c/strong> представьте письмо: адрес получателя — это URL, конверт с пометками — заголовки, а сам текст письма — тело. HTTP устроен так же.\u003c/p>\n\u003c/blockquote>\n\u003ch2>Из чего состоит HTTP-запрос\u003c/h2>\n\u003cp>Вот настоящий запрос, который браузер отправляет, когда вы открываете список товаров:\u003c/p>\n\u003cpre>\u003ccode class=\"language-http\">\u003cspan class=\"hljs-keyword\">GET\u003c/span> \u003cspan class=\"hljs-string\">/api/products?category=shoes\u003c/span> \u003cspan class=\"hljs-meta\">HTTP/1.1\u003c/span>\n\u003cspan class=\"hljs-attribute\">Host\u003c/span>\u003cspan class=\"hljs-punctuation\">: \u003c/span>shop.example.com\n\u003cspan class=\"hljs-attribute\">Accept\u003c/span>\u003cspan class=\"hljs-punctuation\">: \u003c/span>application/json\n\u003cspan class=\"hljs-attribute\">User-Agent\u003c/span>\u003cspan class=\"hljs-punctuation\">: \u003c/span>Mozilla/5.0\n\u003cspan class=\"hljs-attribute\">Authorization\u003c/span>\u003cspan class=\"hljs-punctuation\">: \u003c/span>Bearer eyJhbGciOi...\n\u003c/code>\u003c/pre>\n\u003cp>Разберём построчно:\u003c/p>\n\u003ctable>\n\u003cthead>\n\u003ctr>\n\u003cth>Часть\u003c/th>\n\u003cth>Пример\u003c/th>\n\u003cth>Что это\u003c/th>\n\u003c/tr>\n\u003c/thead>\n\u003ctbody>\n\u003ctr>\n\u003ctd>\u003cstrong>Метод\u003c/strong>\u003c/td>\n\u003ctd>\u003ccode>GET\u003c/code>\u003c/td>\n\u003ctd>Что сделать с ресурсом: прочитать, создать, изменить, удалить\u003c/td>\n\u003c/tr>\n\u003ctr>\n\u003ctd>\u003cstrong>Путь (URL)\u003c/strong>\u003c/td>\n\u003ctd>\u003ccode>/api/products?category=shoes\u003c/code>\u003c/td>\n\u003ctd>К какому ресурсу обращаемся. После \u003ccode>?\u003c/code> идут параметры-фильтры\u003c/td>\n\u003c/tr>\n\u003ctr>\n\u003ctd>\u003cstrong>Версия\u003c/strong>\u003c/td>\n\u003ctd>\u003ccode>HTTP/1.1\u003c/code>\u003c/td>\n\u003ctd>Диалект языка, сейчас почти везде 1.1 или 2\u003c/td>\n\u003c/tr>\n\u003ctr>\n\u003ctd>\u003cstrong>Заголовки\u003c/strong>\u003c/td>\n\u003ctd>\u003ccode>Host\u003c/code>, \u003ccode>Accept\u003c/code>, \u003ccode>Authorization\u003c/code>\u003c/td>\n\u003ctd>Метаданные: куда, в каком формате ответ ждать, кто мы\u003c/td>\n\u003c/tr>\n\u003ctr>\n\u003ctd>\u003cstrong>Тело\u003c/strong>\u003c/td>\n\u003ctd>\u003cem>(у GET его нет)\u003c/em>\u003c/td>\n\u003ctd>Данные, которые клиент передаёт серверу — у \u003ccode>POST\u003c/code> и \u003ccode>PUT\u003c/code> здесь JSON\u003c/td>\n\u003c/tr>\n\u003c/tbody>\n\u003c/table>\n\u003cp>Всё вместе — метод + путь + заголовки + тело — это и есть запрос. Сервер смотрит на метод и путь, понимает, \u003cem>что от него хотят\u003c/em>, и решает, какую логику запустить.\u003c/p>\n\u003ch2>Методы: GET, POST, PUT, PATCH, DELETE\u003c/h2>\n\u003cp>Метод — это «глагол» запроса. Пять основных:\u003c/p>\n\u003ctable>\n\u003cthead>\n\u003ctr>\n\u003cth>Метод\u003c/th>\n\u003cth>Семантика\u003c/th>\n\u003cth>Тело запроса\u003c/th>\n\u003cth>Типичный пример\u003c/th>\n\u003c/tr>\n\u003c/thead>\n\u003ctbody>\n\u003ctr>\n\u003ctd>\u003ccode>GET\u003c/code>\u003c/td>\n\u003ctd>Получить данные, ничего не менять\u003c/td>\n\u003ctd>нет\u003c/td>\n\u003ctd>«дай список товаров»\u003c/td>\n\u003c/tr>\n\u003ctr>\n\u003ctd>\u003ccode>POST\u003c/code>\u003c/td>\n\u003ctd>Создать что-то новое\u003c/td>\n\u003ctd>да (JSON)\u003c/td>\n\u003ctd>«создай заказ из корзины»\u003c/td>\n\u003c/tr>\n\u003ctr>\n\u003ctd>\u003ccode>PUT\u003c/code>\u003c/td>\n\u003ctd>Обновить объект целиком\u003c/td>\n\u003ctd>да (JSON)\u003c/td>\n\u003ctd>«замени профиль пользователя»\u003c/td>\n\u003c/tr>\n\u003ctr>\n\u003ctd>\u003ccode>PATCH\u003c/code>\u003c/td>\n\u003ctd>Обновить часть полей\u003c/td>\n\u003ctd>да (JSON)\u003c/td>\n\u003ctd>«поменяй только email»\u003c/td>\n\u003c/tr>\n\u003ctr>\n\u003ctd>\u003ccode>DELETE\u003c/code>\u003c/td>\n\u003ctd>Удалить\u003c/td>\n\u003ctd>обычно нет\u003c/td>\n\u003ctd>«удали товар из корзины»\u003c/td>\n\u003c/tr>\n\u003c/tbody>\n\u003c/table>\n\u003cp>Важная привычка бэкенда: один и тот же путь с разными методами делает разное. \u003ccode>GET /api/orders\u003c/code> — «покажи заказы», \u003ccode>POST /api/orders\u003c/code> — «создай заказ». Метод — часть смысла, а не техническая деталь.\u003c/p>\n\u003ch2>Ответ: статус-код + заголовки + тело\u003c/h2>\n\u003cp>Сервер всегда отвечает \u003cstrong>статус-кодом\u003c/strong> — трёхзначным числом, которое сразу говорит, как всё прошло:\u003c/p>\n\u003ctable>\n\u003cthead>\n\u003ctr>\n\u003cth>Класс\u003c/th>\n\u003cth>Значение\u003c/th>\n\u003cth>Частые примеры\u003c/th>\n\u003c/tr>\n\u003c/thead>\n\u003ctbody>\n\u003ctr>\n\u003ctd>\u003ccode>2xx\u003c/code>\u003c/td>\n\u003ctd>Успех\u003c/td>\n\u003ctd>\u003ccode>200 OK\u003c/code>, \u003ccode>201 Created\u003c/code>, \u003ccode>204 No Content\u003c/code>\u003c/td>\n\u003c/tr>\n\u003ctr>\n\u003ctd>\u003ccode>3xx\u003c/code>\u003c/td>\n\u003ctd>Редирект\u003c/td>\n\u003ctd>\u003ccode>301 Moved Permanently\u003c/code>\u003c/td>\n\u003c/tr>\n\u003ctr>\n\u003ctd>\u003ccode>4xx\u003c/code>\u003c/td>\n\u003ctd>\u003cstrong>Ошибся клиент\u003c/strong>\u003c/td>\n\u003ctd>\u003ccode>400 Bad Request\u003c/code>, \u003ccode>401 Unauthorized\u003c/code>, \u003ccode>403 Forbidden\u003c/code>, \u003ccode>404 Not Found\u003c/code>\u003c/td>\n\u003c/tr>\n\u003ctr>\n\u003ctd>\u003ccode>5xx\u003c/code>\u003c/td>\n\u003ctd>\u003cstrong>Ошибся сервер\u003c/strong>\u003c/td>\n\u003ctd>\u003ccode>500 Internal Server Error\u003c/code>\u003c/td>\n\u003c/tr>\n\u003c/tbody>\n\u003c/table>\n\u003cp>Полезная шпаргалка для переписки в чатах:\u003c/p>\n\u003cul>\n\u003cli>\u003ccode>401\u003c/code> — «я не знаю, кто ты» (не авторизован)\u003c/li>\n\u003cli>\u003ccode>403\u003c/code> — «я знаю, кто ты, но нельзя» (нет прав)\u003c/li>\n\u003cli>\u003ccode>404\u003c/code> — «такого ресурса нет»\u003c/li>\n\u003cli>\u003ccode>500\u003c/code> — «всё сломалось на нашей стороне» (бэкендеру — в логи!)\u003c/li>\n\u003c/ul>\n\u003cp>Ответ на успешный \u003ccode>POST\u003c/code> (создание заказа) выглядит так:\u003c/p>\n\u003cpre>\u003ccode class=\"language-http\">\u003cspan class=\"hljs-meta\">HTTP/1.1\u003c/span> \u003cspan class=\"hljs-number\">201\u003c/span> Created\n\u003cspan class=\"hljs-attribute\">Content-Type\u003c/span>\u003cspan class=\"hljs-punctuation\">: \u003c/span>application/json\n\u003cspan class=\"hljs-attribute\">Location\u003c/span>\u003cspan class=\"hljs-punctuation\">: \u003c/span>/api/orders/42\n\n\u003cspan class=\"language-prolog\">{\n  \u003cspan class=\"hljs-string\">&quot;id&quot;\u003c/span>: \u003cspan class=\"hljs-number\">42\u003c/span>,\n  \u003cspan class=\"hljs-string\">&quot;status&quot;\u003c/span>: \u003cspan class=\"hljs-string\">&quot;NEW&quot;\u003c/span>,\n  \u003cspan class=\"hljs-string\">&quot;items&quot;\u003c/span>: [\n    { \u003cspan class=\"hljs-string\">&quot;sku&quot;\u003c/span>: \u003cspan class=\"hljs-string\">&quot;SHOE-01&quot;\u003c/span>, \u003cspan class=\"hljs-string\">&quot;title&quot;\u003c/span>: \u003cspan class=\"hljs-string\">&quot;Кроссовки&quot;\u003c/span>, \u003cspan class=\"hljs-string\">&quot;price&quot;\u003c/span>: \u003cspan class=\"hljs-number\">5990\u003c/span> }\n  ]\n}\n\u003c/span>\u003c/code>\u003c/pre>\n\u003cp>\u003ccode>201\u003c/code>, а не \u003ccode>200\u003c/code> — маленький, но важный штрих: сервер не просто «ок», он сообщает, что ресурс \u003cem>создан\u003c/em>, и в заголовке \u003ccode>Location\u003c/code> говорит, где его искать.\u003c/p>\n\u003ch2>JSON — язык обмена данными\u003c/h2>\n\u003cp>Тело запроса и ответа почти всегда — \u003cstrong>JSON\u003c/strong>: текстовый формат «ключ – значение», читаемый и человеком, и программой.\u003c/p>\n\u003cpre>\u003ccode class=\"language-json\">\u003cspan class=\"hljs-punctuation\">{\u003c/span>\n  \u003cspan class=\"hljs-attr\">&quot;id&quot;\u003c/span>\u003cspan class=\"hljs-punctuation\">:\u003c/span> \u003cspan class=\"hljs-number\">42\u003c/span>\u003cspan class=\"hljs-punctuation\">,\u003c/span>\n  \u003cspan class=\"hljs-attr\">&quot;title&quot;\u003c/span>\u003cspan class=\"hljs-punctuation\">:\u003c/span> \u003cspan class=\"hljs-string\">&quot;Кроссовки&quot;\u003c/span>\u003cspan class=\"hljs-punctuation\">,\u003c/span>\n  \u003cspan class=\"hljs-attr\">&quot;price&quot;\u003c/span>\u003cspan class=\"hljs-punctuation\">:\u003c/span> \u003cspan class=\"hljs-number\">5990\u003c/span>\u003cspan class=\"hljs-punctuation\">,\u003c/span>\n  \u003cspan class=\"hljs-attr\">&quot;inStock&quot;\u003c/span>\u003cspan class=\"hljs-punctuation\">:\u003c/span> \u003cspan class=\"hljs-literal\">\u003cspan class=\"hljs-keyword\">true\u003c/span>\u003c/span>\u003cspan class=\"hljs-punctuation\">,\u003c/span>\n  \u003cspan class=\"hljs-attr\">&quot;tags&quot;\u003c/span>\u003cspan class=\"hljs-punctuation\">:\u003c/span> \u003cspan class=\"hljs-punctuation\">[\u003c/span>\u003cspan class=\"hljs-string\">&quot;sports&quot;\u003c/span>\u003cspan class=\"hljs-punctuation\">,\u003c/span> \u003cspan class=\"hljs-string\">&quot;new&quot;\u003c/span>\u003cspan class=\"hljs-punctuation\">]\u003c/span>\n\u003cspan class=\"hljs-punctuation\">}\u003c/span>\n\u003c/code>\u003c/pre>\n\u003cp>Правила простые: объект в \u003ccode>{}\u003c/code>, список в \u003ccode>[]\u003c/code>, строки в \u003ccode>&quot;&quot;\u003c/code>, числа и \u003ccode>true\u003c/code>/\u003ccode>false\u003c/code>/\u003ccode>null\u003c/code> как есть. В Java (и в Spring Boot) этому формату соответствуют обычные классы с полями — но об этом в уроке 4.\u003c/p>\n\u003cblockquote>\n\u003cp>\u003cstrong>💡 Фронтендерам:\u003c/strong> JSON вы знаете идеально. Новое для вас — что на бэкенде этот JSON превращается в \u003cstrong>Java-объект\u003c/strong> автоматически: за это отвечает Spring Boot и специальные классы-DTO.\u003c/p>\n\u003c/blockquote>\n\u003ch2>Итог\u003c/h2>\n\u003cul>\n\u003cli>Веб = \u003cstrong>клиент–сервер\u003c/strong>: клиент всегда начинает разговор, сервер отвечает\u003c/li>\n\u003cli>Запрос = \u003cstrong>метод + путь + заголовки + тело\u003c/strong>; метод — это смысл («прочитай» / «создай» / «удали»)\u003c/li>\n\u003cli>Ответ = \u003cstrong>статус-код + заголовки + тело\u003c/strong>; \u003ccode>2xx\u003c/code> — успех, \u003ccode>4xx\u003c/code> — вина клиента, \u003ccode>5xx\u003c/code> — вина сервера\u003c/li>\n\u003cli>\u003cstrong>JSON\u003c/strong> — формат обмена; на бэкенде он маппится в Java-объекты\u003c/li>\n\u003c/ul>\n\u003cp>Следующий урок — что происходит \u003cem>на стороне сервера\u003c/em> после того, как он получил запрос: слои, база данных и почему бэкенд — это не «одна большая программа».\u003c/p>\n\u003ch2>Квиз\u003c/h2>\n\u003cdiv class=\"quiz-slot\" data-quiz=\"0\">\u003c/div>","quizzes":[[{"type":"single","question":"Ты открываешь в браузере адрес https://shop.example.com/products. Что делает браузер?","options":["Отправляет HTTP-запрос GET на сервер shop.example.com","Скачивает себе всю базу товаров магазина","Устанавливает постоянное соединение и ждёт изменений","Ничего: сервер сам присылает страницу, когда появляются новости"],"correct":0,"explanation":"Браузер — это клиент: он отправляет GET-запрос по пути /products и ждёт ответа. Инициатор разговора в HTTP — всегда клиент."},{"type":"single","codeLang":"http","code":"HTTP/1.1 201 Created\nContent-Type: application/json\nLocation: /api/orders/42\n\n{\"id\": 42, \"status\": \"NEW\"}\n","question":"Посмотри на ответ сервера. Что означает статус 201?","options":["Ресурс успешно создан, в Location — где его искать","Ошибка авторизации: нужно перелогиниться","Ресурс не найден, проверь URL","Всё в порядке, это просто разновидность OK без деталей"],"correct":0,"explanation":"201 Created — успех создания ресурса. Заголовок Location показывает адрес нового объекта. «Просто OK» — это 200, он не сообщает о создании.","codeHtml":"\u003cspan class=\"hljs-meta\">HTTP/1.1\u003c/span> \u003cspan class=\"hljs-number\">201\u003c/span> Created\n\u003cspan class=\"hljs-attribute\">Content-Type\u003c/span>\u003cspan class=\"hljs-punctuation\">: \u003c/span>application/json\n\u003cspan class=\"hljs-attribute\">Location\u003c/span>\u003cspan class=\"hljs-punctuation\">: \u003c/span>/api/orders/42\n\n\u003cspan class=\"language-json\">\u003cspan class=\"hljs-punctuation\">{\u003c/span>\u003cspan class=\"hljs-attr\">&quot;id&quot;\u003c/span>\u003cspan class=\"hljs-punctuation\">:\u003c/span> \u003cspan class=\"hljs-number\">42\u003c/span>\u003cspan class=\"hljs-punctuation\">,\u003c/span> \u003cspan class=\"hljs-attr\">&quot;status&quot;\u003c/span>\u003cspan class=\"hljs-punctuation\">:\u003c/span> \u003cspan class=\"hljs-string\">&quot;NEW&quot;\u003c/span>\u003cspan class=\"hljs-punctuation\">}\u003c/span>\n\u003c/span>"},{"type":"multi","question":"Какие утверждения про HTTP-методы верны? (несколько ответов)","options":["GET используют, чтобы получить данные, не меняя их на сервере","POST отправляет данные на сервер — например, чтобы создать объект","DELETE обязан передавать JSON-тело с описанием того, что удаляем","PUT и POST различаются скоростью: PUT всегда быстрее"],"correct":[0,1],"explanation":"GET — чтение, POST — создание/отправка данных. Тело у DELETE обычно пустое (что удалять — сказано в пути), а различие PUT/POST — в смысле (полная замена vs создание), а не в скорости."},{"type":"blank","question":"Какое значение должен иметь заголовок Content-Type, чтобы сообщить серверу, что тело запроса — JSON? Ответ в формате «тип/подтип».","answers":["application/json"],"explanation":"Content-Type: application/json — стандартный способ сказать «тело — это JSON». Без него Spring Boot не поймёт, как разбирать тело запроса."},{"type":"match","question":"Сопоставь HTTP-метод и его типичное назначение.","pairs":[{"left":"GET","right":"Получить данные, не меняя их"},{"left":"POST","right":"Создать новый объект"},{"left":"PUT","right":"Обновить объект целиком"},{"left":"DELETE","right":"Удалить объект"}]},{"type":"single","codeLang":"http","code":"GET /api/users/1042 HTTP/1.1\nHost: shop.example.com\nAuthorization: Bearer eyJhbGciOi...\n","question":"Запрос вернул статус 404, хотя пользователь 1042 точно существует в базе. Какая гипотеза хуже всего?","options":["Бэкенд ищет пользователя не в той таблице — баг на сервере","В пути опечатка: например, /api/users/1O42 с буквой O вместо нуля","Токен в Authorization истёк — сервер не узнал клиента","Маршрут /api/users/{id} вообще не настроен в приложении"],"correct":2,"explanation":"Истёкший или невалидный токен — это ошибка авторизации: сервер отвечает 401 (или 403), но не 404. А вот опечатка в id, отсутствие маршрута или баг с таблицей как раз дают именно «не найдено».","codeHtml":"\u003cspan class=\"hljs-keyword\">GET\u003c/span> \u003cspan class=\"hljs-string\">/api/users/1042\u003c/span> \u003cspan class=\"hljs-meta\">HTTP/1.1\u003c/span>\n\u003cspan class=\"hljs-attribute\">Host\u003c/span>\u003cspan class=\"hljs-punctuation\">: \u003c/span>shop.example.com\n\u003cspan class=\"hljs-attribute\">Authorization\u003c/span>\u003cspan class=\"hljs-punctuation\">: \u003c/span>Bearer eyJhbGciOi...\n"},{"type":"multi","question":"Какие статус-коды говорят об ошибке на стороне клиента (класс 4xx)?","options":["404 Not Found","401 Unauthorized","500 Internal Server Error","204 No Content"],"correct":[0,1],"explanation":"404 и 401 — класс 4xx, вина клиента (неверный ресурс / нет авторизации). 500 — серверная ошибка (5xx). 204 — вообще не ошибка: успешный ответ без тела."}]]}]};
+</script>
+<script>
+/* BE-101 course engine: роутинг, прогресс, квиз-движок. Ванильный JS, без зависимостей. */
+(function () {
+  'use strict';
+
+  var LESSONS = (window.BE101 && window.BE101.lessons) || [];
+  var STORE_KEY = 'be101.progress.v1';
+  var PASS_RATIO = 0.8; // порог сдачи квиза: 80%+
+
+  // ---------- утилиты ----------
+
+  function el(tag, cls, html) {
+    var node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (html !== undefined) node.innerHTML = html;
+    return node;
+  }
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function normalizeText(s) {
+    return String(s).trim().toLowerCase().replace(/\s+/g, ' ');
+  }
+
+  // ---------- прогресс (localStorage) ----------
+  // { lessonId: { quizPassed: {slotIndex: true}, labDone: bool } }
+
+  function loadProgress() {
+    try {
+      var raw = localStorage.getItem(STORE_KEY);
+      var p = raw ? JSON.parse(raw) : {};
+      return p && typeof p === 'object' ? p : {};
+    } catch (_) { return {}; }
+  }
+  function saveProgress(p) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(p)); } catch (_) {}
+  }
+  function getLessonProgress(id) {
+    var p = loadProgress();
+    var lp = p[id];
+    if (!lp || typeof lp !== 'object') lp = { quizPassed: {}, labDone: false };
+    if (!lp.quizPassed) lp.quizPassed = {};
+    return lp;
+  }
+  function setQuizPassed(lessonId, slot, passed) {
+    var p = loadProgress();
+    if (!p[lessonId]) p[lessonId] = { quizPassed: {}, labDone: false };
+    if (!p[lessonId].quizPassed) p[lessonId].quizPassed = {};
+    p[lessonId].quizPassed[slot] = passed;
+    saveProgress(p);
+  }
+  function setLabDone(lessonId, done) {
+    var p = loadProgress();
+    if (!p[lessonId]) p[lessonId] = { quizPassed: {}, labDone: false };
+    p[lessonId].labDone = done;
+    saveProgress(p);
+  }
+
+  function lessonUnits(l) { return l.quizzes.length + (l.lab ? 1 : 0); }
+  function lessonDoneUnits(l) {
+    var lp = getLessonProgress(l.id);
+    var q = 0;
+    for (var i = 0; i < l.quizzes.length; i++) if (lp.quizPassed[i]) q++;
+    return q + (l.lab && lp.labDone ? 1 : 0);
+  }
+  function moduleProgress() {
+    var done = 0, total = 0;
+    for (var i = 0; i < LESSONS.length; i++) {
+      done += lessonDoneUnits(LESSONS[i]);
+      total += lessonUnits(LESSONS[i]);
+    }
+    return total ? done / total : 0;
+  }
+
+  // ---------- роутинг ----------
+
+  function currentLessonId() {
+    var h = (location.hash || '').replace(/^#\/?/, '');
+    for (var i = 0; i < LESSONS.length; i++) {
+      if (LESSONS[i].id === h) return h;
+    }
+    return LESSONS.length ? LESSONS[0].id : '';
+  }
+
+  // ---------- сайдбар ----------
+
+  function renderSidebar(container, activeId) {
+    var wrap = el('aside', 'sidebar');
+
+    var brand = el('div', 'brand');
+    brand.appendChild(el('div', 'brand-title', 'BE‑101'));
+    brand.appendChild(el('div', 'brand-sub', 'Бэкенд для смежных специальностей'));
+    wrap.appendChild(brand);
+
+    var progWrap = el('div', 'module-progress');
+    var pct = Math.round(moduleProgress() * 100);
+    progWrap.appendChild(el('div', 'module-progress-label',
+      'Прогресс модуля: <b>' + pct + '%</b>'));
+    var bar = el('div', 'module-progress-bar');
+    var fill = el('div', 'module-progress-fill');
+    fill.style.width = pct + '%';
+    bar.appendChild(fill);
+    progWrap.appendChild(bar);
+    wrap.appendChild(progWrap);
+
+    var list = el('nav', 'lesson-list');
+    LESSONS.forEach(function (l) {
+      var done = lessonUnits(l) > 0 && lessonDoneUnits(l) === lessonUnits(l);
+      var item = el('a',
+        'lesson-item' + (l.id === activeId ? ' active' : ''),
+        '<span class="lesson-status ' + (done ? 'done' : '') + '">' + (done ? '✓' : '') + '</span>' +
+        '<span class="lesson-title">' + esc(l.order + '. ' + l.title) + '</span>');
+      item.href = '#/' + l.id;
+      list.appendChild(item);
+    });
+    wrap.appendChild(list);
+
+    var footer = el('div', 'sidebar-footer',
+      'Прогресс хранится только в твоём браузере');
+    wrap.appendChild(footer);
+
+    container.appendChild(wrap);
+  }
+
+  // обновить только сайдбар (галочки/прогресс), не трогая контент урока:
+  // полный render() пересоздал бы DOM и сбрасывал незакрытую попытку квиза
+  function updateSidebar(activeId) {
+    var appEl = document.getElementById('app');
+    var old = appEl && appEl.querySelector('.sidebar');
+    if (!old) return;
+    var holder = el('div');
+    renderSidebar(holder, activeId || currentLessonId());
+    old.parentNode.replaceChild(holder.firstChild, old);
+  }
+
+  // ---------- квиз-движок ----------
+
+  var TYPE_LABELS = {
+    single: 'один ответ',
+    multi: 'несколько ответов',
+    blank: 'впиши ответ',
+    match: 'сопоставь',
+  };
+
+  function mountQuiz(slotEl, lesson, slotIndex) {
+    var questions = lesson.quizzes[slotIndex];
+    var lp = getLessonProgress(lesson.id);
+    var alreadyPassed = !!lp.quizPassed[slotIndex];
+
+    var root = el('div', 'quiz');
+    root.appendChild(el('div', 'quiz-head',
+      '<span class="quiz-badge">Квиз</span>' +
+      '<span class="quiz-hint">Порог сдачи — ' + Math.round(PASS_RATIO * 100) + '%. Пересдача не ограничена.</span>' +
+      (alreadyPassed ? '<span class="quiz-passed-badge">✓ уже сдан</span>' : '')));
+
+    var body = el('div', 'quiz-body');
+    root.appendChild(body);
+
+    var result = el('div', 'quiz-result');
+    root.appendChild(result);
+
+    var order; // порядок вопросов текущей попытки
+
+    function startAttempt() {
+      body.innerHTML = '';
+      result.innerHTML = '';
+      result.className = 'quiz-result';
+      order = shuffle(questions.map(function (_, i) { return i; }));
+      var correctCount = 0;
+      var answeredCount = 0;
+
+      order.forEach(function (qi, pos) {
+        var q = questions[qi];
+        var qEl = el('div', 'question');
+        qEl.appendChild(el('div', 'question-head',
+          '<span class="question-num">' + (pos + 1) + '</span>' +
+          '<span class="question-type">' + TYPE_LABELS[q.type] + '</span>'));
+        qEl.appendChild(el('div', 'question-text', esc(q.question)));
+        if (q.codeHtml) {
+          qEl.appendChild(el('pre', 'question-code', '<code>' + q.codeHtml + '</code>'));
+        }
+        var area = el('div', 'question-area');
+        qEl.appendChild(area);
+
+        function finish(ok, detailsHtml) {
+          correctCount += ok ? 1 : 0;
+          answeredCount++;
+          qEl.classList.add(ok ? 'ok' : 'fail');
+          area.classList.add('locked');
+          var fb = el('div', 'question-feedback ' + (ok ? 'ok' : 'fail'),
+            '<b>' + (ok ? '✓ Верно' : '✗ Неверно') + '</b>' +
+            (q.explanation ? '<div class="question-expl">' + esc(q.explanation) + '</div>' : '') +
+            (detailsHtml || ''));
+          qEl.appendChild(fb);
+          if (answeredCount === questions.length) finishAttempt(correctCount);
+        }
+
+        if (q.type === 'single') {
+          q.options.forEach(function (opt, oi) {
+            var b = el('button', 'option', esc(opt));
+            b.type = 'button';
+            b.addEventListener('click', function () {
+              if (area.classList.contains('locked')) return;
+              var ok = oi === q.correct;
+              area.querySelectorAll('.option').forEach(function (o, idx) {
+                o.disabled = true;
+                if (idx === q.correct) o.classList.add('correct');
+              });
+              if (!ok) b.classList.add('wrong');
+              finish(ok);
+            });
+            area.appendChild(b);
+          });
+        }
+
+        if (q.type === 'multi') {
+          var boxes = [];
+          q.options.forEach(function (opt, oi) {
+            var lab = el('label', 'option check',
+              '<input type="checkbox" data-i="' + oi + '"> <span>' + esc(opt) + '</span>');
+            area.appendChild(lab);
+            boxes.push(lab);
+          });
+          var submit = el('button', 'btn small', 'Ответить');
+          submit.type = 'button';
+          submit.addEventListener('click', function () {
+            if (area.classList.contains('locked')) return;
+            var chosen = [];
+            boxes.forEach(function (l) {
+              var cb = l.querySelector('input');
+              if (cb.checked) chosen.push(Number(cb.dataset.i));
+            });
+            if (!chosen.length) return;
+            var need = q.correct.slice().sort(function (a, b) { return a - b; });
+            var got = chosen.slice().sort(function (a, b) { return a - b; });
+            var ok = need.length === got.length && need.every(function (v, i) { return v === got[i]; });
+            boxes.forEach(function (l) {
+              var cb = l.querySelector('input');
+              cb.disabled = true;
+              var i = Number(cb.dataset.i);
+              if (need.indexOf(i) >= 0) l.classList.add('correct');
+              else if (cb.checked) l.classList.add('wrong');
+            });
+            finish(ok);
+          });
+          area.appendChild(submit);
+        }
+
+        if (q.type === 'blank') {
+          var row = el('div', 'blank-row');
+          var input = document.createElement('input');
+          input.type = 'text';
+          input.className = 'blank-input';
+          input.placeholder = 'Твой ответ…';
+          input.autocomplete = 'off';
+          input.spellcheck = false;
+          var b = el('button', 'btn small', 'Ответить');
+          b.type = 'button';
+          row.appendChild(input);
+          row.appendChild(b);
+          area.appendChild(row);
+          function submitBlank() {
+            if (area.classList.contains('locked')) return;
+            var v = normalizeText(input.value);
+            if (!v) return;
+            var ok = q.answers.some(function (a) { return normalizeText(a) === v; });
+            input.disabled = true;
+            b.disabled = true;
+            input.classList.add(ok ? 'correct' : 'wrong');
+            finish(ok, ok ? '' : '<div class="correct-answer">Правильный ответ: <b>' +
+              esc(q.answers[0]) + '</b></div>');
+          }
+          b.addEventListener('click', submitBlank);
+          input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') submitBlank();
+          });
+        }
+
+        if (q.type === 'match') {
+          var rights = shuffle(q.pairs.map(function (p) { return p.right; }));
+          var selects = [];
+          q.pairs.forEach(function (p) {
+            var rowM = el('div', 'match-row');
+            rowM.appendChild(el('div', 'match-left', esc(p.left)));
+            var sel = document.createElement('select');
+            sel.className = 'match-select';
+            sel.appendChild(el('option', '', '— выбери —'));
+            rights.forEach(function (r) {
+              var o = el('option', '', esc(r));
+              o.value = r;
+              sel.appendChild(o);
+            });
+            rowM.appendChild(sel);
+            area.appendChild(rowM);
+            selects.push({ select: sel, right: p.right });
+          });
+          var submitM = el('button', 'btn small', 'Ответить');
+          submitM.type = 'button';
+          submitM.addEventListener('click', function () {
+            if (area.classList.contains('locked')) return;
+            if (selects.some(function (s) { return !s.select.value; })) return;
+            var allOk = true;
+            selects.forEach(function (s) {
+              s.select.disabled = true;
+              var ok = s.select.value === s.right;
+              if (!ok) allOk = false;
+              s.select.classList.add(ok ? 'correct' : 'wrong');
+            });
+            finish(allOk);
+          });
+          area.appendChild(submitM);
+        }
+
+        body.appendChild(qEl);
+      });
+    }
+
+    function finishAttempt(correctCount) {
+      var pct = Math.round((correctCount / questions.length) * 100);
+      var passed = correctCount / questions.length >= PASS_RATIO;
+      setQuizPassed(lesson.id, slotIndex, passed || getLessonProgress(lesson.id).quizPassed[slotIndex]);
+
+      result.className = 'quiz-result show ' + (passed ? 'ok' : 'fail');
+      result.innerHTML =
+        '<div class="quiz-score">' +
+        (passed ? '🎉 Квиз сдан!' : 'Пока не сдан') +
+        ' — верно ' + correctCount + ' из ' + questions.length +
+        ' (' + pct + '%)' +
+        '</div>' +
+        (passed
+          ? '<div class="quiz-note">Урок отмечен пройденным ✓</div>'
+          : '<div class="quiz-note">Нужно ' + Math.round(PASS_RATIO * 100) +
+            '%+. Перечитай пояснения выше и попробуй ещё раз — вопросы перемешаются.</div>');
+
+      var retake = el('button', 'btn small', 'Пройти заново');
+      retake.type = 'button';
+      retake.addEventListener('click', function () {
+        startAttempt();
+      });
+      result.appendChild(retake);
+      updateSidebar();
+    }
+
+    slotEl.innerHTML = '';
+    slotEl.appendChild(root);
+    startAttempt();
+  }
+
+  // ---------- карточка лабы ----------
+
+  function mountLab(article, lesson) {
+    var lab = lesson.lab;
+    if (!lab) return;
+    var card = el('div', 'lab-card');
+    card.appendChild(el('div', 'lab-head', '<span class="lab-badge">Лабораторная</span> ' + esc(lab.title)));
+    if (lab.description) card.appendChild(el('p', 'lab-desc', esc(lab.description)));
+    if (lab.branch) {
+      card.appendChild(el('div', 'lab-branches',
+        'Ветка задания: <code>' + esc(lab.branch) + '</code>' +
+        (lab.branchSolution ? ' · решение: <code>' + esc(lab.branchSolution) + '</code>' : '') +
+        (lab.hasTests ? ' · проверка: <code>' + esc(lab.testCommand || 'mvn test') + '</code>' : ' · сверяешься с решением')
+      ));
+    }
+    var lp = getLessonProgress(lesson.id);
+    var label = el('label', 'lab-check',
+      '<input type="checkbox"' + (lp.labDone ? ' checked' : '') + '> Я сделал эту лабу');
+    label.querySelector('input').addEventListener('change', function (e) {
+      setLabDone(lesson.id, e.target.checked);
+      updateSidebar(); // только галочки/прогресс, без сброса квиза
+    });
+    card.appendChild(label);
+    article.appendChild(card);
+  }
+
+  // ---------- страница ----------
+
+  var app;
+
+  function render() {
+    if (!app) app = document.getElementById('app');
+    var id = currentLessonId();
+    var lesson = LESSONS.filter(function (l) { return l.id === id; })[0];
+
+    app.innerHTML = '';
+    if (!lesson) {
+      app.appendChild(el('div', 'empty', 'Уроки не найдены — запусти сборку (tools/generator)'));
+      return;
+    }
+
+    renderSidebar(app, lesson.id);
+
+    var main = el('main', 'content');
+    var article = el('article', 'lesson');
+    article.innerHTML = lesson.html;
+    main.appendChild(article);
+    app.appendChild(main);
+
+    // лаба — в конец урока
+    mountLab(article, lesson);
+
+    // монтируем квизы в слоты из markdown
+    article.querySelectorAll('.quiz-slot').forEach(function (slot) {
+      var idx = Number(slot.dataset.quiz);
+      if (lesson.quizzes[idx]) mountQuiz(slot, lesson, idx);
+    });
+
+    // mermaid-диаграммы
+    if (window.mermaid) {
+      try {
+        window.mermaid.initialize({ startOnLoad: false, theme: 'neutral', locale: 'ru' });
+        var nodes = article.querySelectorAll('.mermaid');
+        if (nodes.length) window.mermaid.run({ nodes: nodes });
+      } catch (_) { /* диаграммы не критичны */ }
+    }
+
+    window.scrollTo(0, 0);
+  }
+
+  window.addEventListener('hashchange', render);
+  document.addEventListener('DOMContentLoaded', render);
+  if (document.readyState !== 'loading') render();
+})();
+
+</script>
+</body>
+</html>

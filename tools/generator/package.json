@@ -1,0 +1,16 @@
+{
+  "name": "be101-generator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Генератор статического сайта курса BE-101 из markdown",
+  "scripts": {
+    "build": "node generate.js"
+  },
+  "devDependencies": {
+    "gray-matter": "^4.0.3",
+    "highlight.js": "^11.10.0",
+    "js-yaml": "^4.1.0",
+    "markdown-it": "^14.1.0",
+    "mermaid": "^11.4.0"
+  }
+}
