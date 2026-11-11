@@ -4,6 +4,13 @@ title: "Миграции и прод: Liquibase"
 module: 3
 moduleTitle: "Данные"
 order: 5
+lab:
+  title: "Лаба 5. Связи и миграции"
+  description: "Написать changeset v2 (таблица tasks с FK) и связать entity двусторонней связью с каскадами. Проверка — 4 теста: схема, FK, связи, каскад."
+  branch: lab-5
+  branchSolution: lab-5-solution
+  hasTests: true
+  testCommand: mvn test
 ---
 
 # Урок 5. Миграции и прод: Liquibase
@@ -87,10 +94,13 @@ databaseChangeLog:
 
 ```xml
 <dependency>
-    <groupId>org.liquibase</groupId>
-    <artifactId>liquibase-core</artifactId>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-liquibase</artifactId>
 </dependency>
 ```
+
+> В Boot 4 автоконфигурация Liquibase живёт в отдельном стартере: голый
+> `org.liquibase:liquibase-core` на classpath ничего не запустит — база останется пустой.
 
 ```yaml
 spring:
