@@ -1,10 +1,9 @@
 package be101.lab2.task.dto;
 
 /**
- * TODO 4: DTO частичного обновления. Поле одно:
- *   Boolean done
- *
- * Boolean (обёртка!), чтобы отличить «не прислали» (null) от «прислали false».
+ * Boolean (обёртка): null = «не прислали», false = «прислали false».
  */
-public record PatchTaskRequest() {
+public record PatchTaskRequest(
+        Boolean done
+) {
 }

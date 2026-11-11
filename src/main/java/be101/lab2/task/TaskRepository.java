@@ -1,13 +1,14 @@
 package be101.lab2.task;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
 /**
- * TODO 1: сделай так, чтобы это стал Spring Data-репозиторий:
- *
- *   public interface TaskRepository extends JpaRepository<Task, Long> {
- *       List<Task> findByProjectId(Long projectId);
- *   }
- *
- * Урок 5 подскажет: и JpaRepository, и findByProjectId Spring сгенерирует сам.
+ * Spring Data сам сгенерирует реализацию — и готовых методов JpaRepository,
+ * и SQL по имени findByProjectId (урок 5).
  */
-public interface TaskRepository {
+public interface TaskRepository extends JpaRepository<Task, Long> {
+
+    List<Task> findByProjectId(Long projectId);
 }
