@@ -1,0 +1,9 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: be-101-lab-4
+  graphql:
+    graphiql:
+      enabled: true   # песочница на http://localhost:8080/graphiql

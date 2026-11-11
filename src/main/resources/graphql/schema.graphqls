@@ -1,0 +1,19 @@
+# Контракт GraphQL (лаба 4): схема ГОТОВА и менять её нельзя —
+# это договор, как OpenAPI-спека из лабы 3.
+# Ваша задача — обслужить его методами с @QueryMapping/@MutationMapping.
+
+type Query {
+    tasks(done: Boolean): [Task!]!
+    task(id: ID!): Task
+}
+
+type Mutation {
+    completeTask(id: ID!): Task
+}
+
+type Task {
+    id: ID!
+    title: String!
+    done: Boolean!
+    projectName: String!
+}
