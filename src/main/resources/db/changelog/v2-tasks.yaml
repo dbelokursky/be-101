@@ -1,0 +1,6 @@
+# TODO 4: создайте таблицу tasks по образцу v1-projects.yaml.
+# Колонки (их ждут тесты): id (PK, autoincrement), project_id (BIGINT NOT NULL,
+# FK -> projects.id с именем fk_tasks_project), title (varchar(200) NOT NULL),
+# done (boolean NOT NULL).
+# Бонус: индекс idx_tasks_project по project_id.
+databaseChangeLog: []

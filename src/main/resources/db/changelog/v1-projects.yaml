@@ -1,0 +1,18 @@
+# ГОТОВО: таблица проектов — образец для вашей v2
+databaseChangeLog:
+  - changeSet:
+      id: create-projects
+      author: be101
+      changes:
+        - createTable:
+            tableName: projects
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints: { primaryKey: true, nullable: false }
+              - column:
+                  name: name
+                  type: varchar(100)
+                  constraints: { nullable: false }
