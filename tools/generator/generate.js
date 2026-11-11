@@ -69,6 +69,21 @@ function highlightQuizCode(q, file) {
   q.codeHtml = esc(q.code);
 }
 
+// кейс: текстовая задача + textarea + эталонный разбор (markdown)
+function normalizeCase(c, file) {
+  const where = `${file}: блок case`;
+  if (!c || typeof c !== 'object') throw new Error(`${where}: ожидается YAML-объект`);
+  for (const field of ['title', 'task', 'reference']) {
+    if (!c[field]) throw new Error(`${where}: нет поля "${field}"`);
+  }
+  return {
+    title: String(c.title),
+    task: String(c.task),
+    placeholder: String(c.placeholder || ''),
+    referenceHtml: md.render(String(c.reference)),
+  };
+}
+
 function normalizeQuiz(list, file) {
   if (!Array.isArray(list) || list.length === 0) {
     throw new Error(`${file}: блок quiz должен быть YAML-списком вопросов`);
@@ -124,12 +139,17 @@ function collectLessons() {
     }
 
     const quizzes = [];
+    const cases = [];
     md.renderer.rules.fence = (tokens, idx, options, env, self) => {
       const token = tokens[idx];
       const info = (token.info || '').trim().split(/\s+/)[0];
       if (info === 'quiz') {
         quizzes.push(normalizeQuiz(yaml.load(token.content), file));
         return `<div class="quiz-slot" data-quiz="${quizzes.length - 1}"></div>`;
+      }
+      if (info === 'case') {
+        cases.push(normalizeCase(yaml.load(token.content), file));
+        return `<div class="case-slot" data-case="${cases.length - 1}"></div>`;
       }
       if (info === 'mermaid') {
         return `<div class="mermaid">${esc(token.content.trim())}</div>`;
@@ -150,6 +170,7 @@ function collectLessons() {
       lab: data.lab || null,
       html,
       quizzes,
+      cases,
     };
   });
 

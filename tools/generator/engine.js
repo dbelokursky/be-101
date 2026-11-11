@@ -47,29 +47,38 @@
   function getLessonProgress(id) {
     var p = loadProgress();
     var lp = p[id];
-    if (!lp || typeof lp !== 'object') lp = { quizPassed: {}, labDone: false };
+    if (!lp || typeof lp !== 'object') lp = { quizPassed: {}, caseDone: {}, labDone: false };
     if (!lp.quizPassed) lp.quizPassed = {};
+    if (!lp.caseDone) lp.caseDone = {};
     return lp;
   }
   function setQuizPassed(lessonId, slot, passed) {
     var p = loadProgress();
-    if (!p[lessonId]) p[lessonId] = { quizPassed: {}, labDone: false };
+    if (!p[lessonId]) p[lessonId] = { quizPassed: {}, caseDone: {}, labDone: false };
     if (!p[lessonId].quizPassed) p[lessonId].quizPassed = {};
     p[lessonId].quizPassed[slot] = passed;
     saveProgress(p);
   }
+  function setCaseDone(lessonId, slot, done) {
+    var p = loadProgress();
+    if (!p[lessonId]) p[lessonId] = { quizPassed: {}, caseDone: {}, labDone: false };
+    if (!p[lessonId].caseDone) p[lessonId].caseDone = {};
+    p[lessonId].caseDone[slot] = done;
+    saveProgress(p);
+  }
   function setLabDone(lessonId, done) {
     var p = loadProgress();
-    if (!p[lessonId]) p[lessonId] = { quizPassed: {}, labDone: false };
+    if (!p[lessonId]) p[lessonId] = { quizPassed: {}, caseDone: {}, labDone: false };
     p[lessonId].labDone = done;
     saveProgress(p);
   }
 
-  function lessonUnits(l) { return l.quizzes.length + (l.lab ? 1 : 0); }
+  function lessonUnits(l) { return l.quizzes.length + l.cases.length + (l.lab ? 1 : 0); }
   function lessonDoneUnits(l) {
     var lp = getLessonProgress(l.id);
-    var q = 0;
-    for (var i = 0; i < l.quizzes.length; i++) if (lp.quizPassed[i]) q++;
+    var q = 0, i;
+    for (i = 0; i < l.quizzes.length; i++) if (lp.quizPassed[i]) q++;
+    for (i = 0; i < l.cases.length; i++) if (lp.caseDone[i]) q++;
     return q + (l.lab && lp.labDone ? 1 : 0);
   }
   function moduleProgress() {
@@ -355,6 +364,55 @@
     startAttempt();
   }
 
+  // ---------- кейс (textarea + эталонный разбор) ----------
+
+  function mountCase(slotEl, lesson, caseIndex) {
+    var c = lesson.cases[caseIndex];
+    var lp = getLessonProgress(lesson.id);
+    var done = !!lp.caseDone[caseIndex];
+
+    var root = el('div', 'case');
+    root.appendChild(el('div', 'case-head',
+      '<span class="case-badge">Кейс</span>' +
+      '<span class="case-title">' + esc(c.title) + '</span>' +
+      (done ? '<span class="case-done-badge">✓ разобран</span>' : '')));
+    root.appendChild(el('div', 'case-task', esc(c.task)));
+
+    var area = document.createElement('textarea');
+    area.className = 'case-input';
+    area.placeholder = c.placeholder || 'Свой ответ…';
+    area.spellcheck = false;
+    root.appendChild(area);
+
+    var btn = el('button', 'btn small', 'Показать эталонный разбор');
+    btn.type = 'button';
+    btn.disabled = true;
+    area.addEventListener('input', function () {
+      btn.disabled = !area.value.trim();
+    });
+    root.appendChild(btn);
+
+    var ref = el('div', 'case-reference' + (done ? ' show' : ''), c.referenceHtml);
+    root.appendChild(ref);
+
+    var note = el('div', 'case-note',
+      'Эталон — для самопроверки: сначала своё решение, потом сверка. Ответ никуда не отправляется.');
+    root.appendChild(note);
+
+    btn.addEventListener('click', function () {
+      if (!area.value.trim()) return;
+      setCaseDone(lesson.id, caseIndex, true);
+      ref.classList.add('show');
+      root.querySelector('.case-head').appendChild(
+        el('span', 'case-done-badge', '✓ разобран'));
+      btn.disabled = true;
+      updateSidebar();
+    });
+
+    slotEl.innerHTML = '';
+    slotEl.appendChild(root);
+  }
+
   // ---------- карточка лабы ----------
 
   function mountLab(article, lesson) {
@@ -409,10 +467,14 @@
     // лаба — в конец урока
     mountLab(article, lesson);
 
-    // монтируем квизы в слоты из markdown
+    // монтируем квизы и кейсы в слоты из markdown
     article.querySelectorAll('.quiz-slot').forEach(function (slot) {
       var idx = Number(slot.dataset.quiz);
       if (lesson.quizzes[idx]) mountQuiz(slot, lesson, idx);
+    });
+    article.querySelectorAll('.case-slot').forEach(function (slot) {
+      var idx = Number(slot.dataset.case);
+      if (lesson.cases[idx]) mountCase(slot, lesson, idx);
     });
 
     // mermaid-диаграммы

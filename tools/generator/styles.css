@@ -275,6 +275,45 @@ body {
 .quiz-score { font-size: 18px; font-weight: 700; }
 .quiz-note { color: var(--ink-soft); font-size: 14px; margin: 6px 0 12px; }
 
+/* ---------- кейс ---------- */
+
+.case {
+  margin: 34px 0 10px;
+  background: var(--paper);
+  border: 1.5px solid #c9b458;
+  border-radius: 14px;
+  padding: 22px 24px;
+  box-shadow: 0 1px 3px rgba(31, 36, 48, .05);
+}
+.case-head {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.case-badge {
+  background: #b78a12; color: #fff;
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .8px; padding: 4px 10px; border-radius: 6px;
+}
+.case-title { font-weight: 700; font-size: 16px; }
+.case-done-badge { color: var(--ok); font-weight: 700; font-size: 13px; }
+.case-task { font-size: 15px; margin-bottom: 12px; }
+.case-input {
+  width: 100%; min-height: 130px; resize: vertical;
+  border: 1.5px solid var(--line); border-radius: 8px;
+  padding: 10px 14px; font-size: 14.5px; font-family: inherit;
+  background: #fbfcfe;
+}
+.case-input:focus { outline: none; border-color: var(--accent); }
+.case .btn { margin-top: 10px; }
+.case .btn:disabled { opacity: .5; cursor: not-allowed; }
+.case-reference {
+  display: none; margin-top: 16px;
+  border-top: 1px dashed #d8c27a; padding-top: 14px;
+}
+.case-reference.show { display: block; }
+.case-reference table { font-size: 14px; }
+.case-note { margin-top: 12px; font-size: 12px; color: var(--ink-soft); }
+
 /* ---------- лаба ---------- */
 
 .lab-card {
