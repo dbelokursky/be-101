@@ -58,6 +58,25 @@ npm install         # один раз
 npm run build       # пересоберёт site/
 ```
 
+## Разработка (для мейнтейнеров)
+
+Интеграционная ветка — `develop`: каждый урок делается в отдельной ветке
+(`lesson-02`, `lesson-03`, …) и мержится в `develop` после готовности.
+
+```bash
+git checkout develop
+git checkout -b lesson-02
+# … пишем content/module-1/lesson-02.md, npm run build …
+git checkout develop
+git merge lesson-02
+```
+
+После правки уроков пересобери сайт: `cd tools/generator && npm run build` —
+и закоммить обновлённый `site/` вместе с контентом.
+
+Ветки лаб (`lab-N`, `lab-N-solution`) в мерж-процесс не входят — это
+задания для студентов, они живут отдельно.
+
 ## Вопросы по курсу
 
 Задавай в канал **#be-101** (замени на актуальный канал вашей команды).
