@@ -2,6 +2,7 @@
 id: lesson-02
 title: Что такое бэкенд-сервис
 module: 1
+moduleTitle: "Spring Boot: бэкенд с нуля"
 order: 2
 lab:
   title: Лаба 0. Запуск

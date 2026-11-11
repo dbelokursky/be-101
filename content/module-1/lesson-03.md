@@ -2,6 +2,7 @@
 id: lesson-03
 title: Java-минимум для чтения кода
 module: 1
+moduleTitle: "Spring Boot: бэкенд с нуля"
 order: 3
 ---
 

@@ -2,6 +2,7 @@
 id: lesson-05
 title: Слои приложения и Kafka
 module: 1
+moduleTitle: "Spring Boot: бэкенд с нуля"
 order: 5
 lab:
   title: Лаба 2. Финальный срез

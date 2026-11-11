@@ -166,6 +166,7 @@ function collectLessons() {
       id: String(data.id),
       title: String(data.title),
       module: Number(data.module),
+      moduleTitle: data.moduleTitle || null,
       order: Number(data.order),
       lab: data.lab || null,
       html,

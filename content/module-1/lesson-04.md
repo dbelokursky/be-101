@@ -2,6 +2,7 @@
 id: lesson-04
 title: Первый REST-контроллер
 module: 1
+moduleTitle: "Spring Boot: бэкенд с нуля"
 order: 4
 lab:
   title: Лаба 1. Контроллер

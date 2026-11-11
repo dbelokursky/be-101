@@ -2,6 +2,7 @@
 id: lesson-01
 title: Клиент–сервер и HTTP
 module: 1
+moduleTitle: "Spring Boot: бэкенд с нуля"
 order: 1
 ---
 

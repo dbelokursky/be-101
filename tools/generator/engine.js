@@ -89,6 +89,7 @@
     }
     return total ? done / total : 0;
   }
+  // moduleProgress оставлен для будущих сводных экранов; сайдбар считает прогресс по каждому модулю отдельно
 
   // ---------- роутинг ----------
 
@@ -110,28 +111,51 @@
     brand.appendChild(el('div', 'brand-sub', 'Бэкенд для смежных специальностей'));
     wrap.appendChild(brand);
 
-    var progWrap = el('div', 'module-progress');
-    var pct = Math.round(moduleProgress() * 100);
-    progWrap.appendChild(el('div', 'module-progress-label',
-      'Прогресс модуля: <b>' + pct + '%</b>'));
-    var bar = el('div', 'module-progress-bar');
-    var fill = el('div', 'module-progress-fill');
-    fill.style.width = pct + '%';
-    bar.appendChild(fill);
-    progWrap.appendChild(bar);
-    wrap.appendChild(progWrap);
-
-    var list = el('nav', 'lesson-list');
+    // группировка уроков по модулям (module — номер, moduleTitle — название)
+    var modules = [];
+    var byNum = {};
     LESSONS.forEach(function (l) {
-      var done = lessonUnits(l) > 0 && lessonDoneUnits(l) === lessonUnits(l);
-      var item = el('a',
-        'lesson-item' + (l.id === activeId ? ' active' : ''),
-        '<span class="lesson-status ' + (done ? 'done' : '') + '">' + (done ? '✓' : '') + '</span>' +
-        '<span class="lesson-title">' + esc(l.order + '. ' + l.title) + '</span>');
-      item.href = '#/' + l.id;
-      list.appendChild(item);
+      if (!byNum[l.module]) {
+        byNum[l.module] = {
+          title: l.moduleTitle || ('Модуль ' + l.module),
+          lessons: [],
+        };
+        modules.push(byNum[l.module]);
+      }
+      byNum[l.module].lessons.push(l);
     });
-    wrap.appendChild(list);
+
+    modules.forEach(function (m) {
+      var done = 0, total = 0;
+      m.lessons.forEach(function (l) {
+        done += lessonDoneUnits(l);
+        total += lessonUnits(l);
+      });
+      var pct = total ? Math.round((done / total) * 100) : 0;
+
+      var head = el('div', 'module-head');
+      head.appendChild(el('div', 'module-title', esc(m.title)));
+      head.appendChild(el('div', 'module-progress-label', pct + '%'));
+      wrap.appendChild(head);
+
+      var bar = el('div', 'module-progress-bar');
+      var fill = el('div', 'module-progress-fill');
+      fill.style.width = pct + '%';
+      bar.appendChild(fill);
+      wrap.appendChild(bar);
+
+      var list = el('nav', 'lesson-list');
+      m.lessons.forEach(function (l) {
+        var lessonDone = lessonUnits(l) > 0 && lessonDoneUnits(l) === lessonUnits(l);
+        var item = el('a',
+          'lesson-item' + (l.id === activeId ? ' active' : ''),
+          '<span class="lesson-status ' + (lessonDone ? 'done' : '') + '">' + (lessonDone ? '✓' : '') + '</span>' +
+          '<span class="lesson-title">' + esc(l.order + '. ' + l.title) + '</span>');
+        item.href = '#/' + l.id;
+        list.appendChild(item);
+      });
+      wrap.appendChild(list);
+    });
 
     var footer = el('div', 'sidebar-footer',
       'Прогресс хранится только в твоём браузере');

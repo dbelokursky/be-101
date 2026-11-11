@@ -53,8 +53,18 @@ body {
 
 .module-progress { margin: 22px 0 18px; }
 .module-progress-label { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 6px; }
+.module-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin: 24px 0 4px;
+}
+.module-head:first-of-type { margin-top: 18px; }
+.module-title {
+  font-size: 13px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .6px; color: var(--ink-soft);
+}
+.module-head .module-progress-label { margin: 0; font-weight: 600; }
 .module-progress-bar {
-  height: 8px; border-radius: 99px; background: var(--line); overflow: hidden;
+  height: 6px; border-radius: 99px; background: var(--line); overflow: hidden;
 }
 .module-progress-fill {
   height: 100%; width: 0;

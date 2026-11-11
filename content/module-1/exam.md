@@ -2,6 +2,7 @@
 id: module-1-exam
 title: Экзамен модуля и кейс
 module: 1
+moduleTitle: "Spring Boot: бэкенд с нуля"
 order: 6
 ---
 
