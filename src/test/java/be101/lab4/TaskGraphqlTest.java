@@ -1,5 +1,7 @@
 package be101.lab4;
 
+import be101.lab4.task.TaskStore;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,6 +24,14 @@ class TaskGraphqlTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private TaskStore taskStore;
+
+    @BeforeEach
+    void resetStore() {
+        taskStore.reset();   // каждый тест стартует с одинаковыми данными
+    }
 
     @Test
     void tasksFilteredByDone() throws Exception {
