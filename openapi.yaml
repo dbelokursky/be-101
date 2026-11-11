@@ -34,12 +34,85 @@ paths:
                   capacity: 12
                   projector: true
 
-  # ---------- TODO 1-3: опишите бронирования ----------
-  # POST   /api/bookings        — создать бронь (201/400/409)
-  # GET    /api/bookings?mine   — список своих броней (200)
-  # DELETE /api/bookings/{id}   — отменить бронь (204/404)
-  #
-  # Требования — в README; проверка — BookingContractTest (mvn test).
+  # ---------- БРОНИ ----------
+  /api/bookings:
+    post:
+      summary: Создать бронь
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBookingRequest"
+            example:
+              roomId: "7"
+              startsAt: "2026-12-01T14:00:00Z"
+              endsAt: "2026-12-01T15:00:00Z"
+      responses:
+        "201":
+          description: Бронь создана
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "400":
+          description: Ошибки валидации (пустая комната, endsAt раньше startsAt)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: VALIDATION_ERROR
+                title: Запрос не прошёл валидацию
+        "409":
+          description: Слот уже занят
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: SLOT_TAKEN
+                title: Слот уже занят
+    get:
+      summary: Список броней
+      parameters:
+        - name: mine
+          in: query
+          description: Только мои брони
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: Список броней
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+
+  /api/bookings/{id}:
+    delete:
+      summary: Отменить бронь
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Бронь отменена (без тела)
+        "404":
+          description: Бронь не найдена
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: BOOKING_NOT_FOUND
+                title: Бронь не найдена
 
 components:
   schemas:
@@ -71,7 +144,44 @@ components:
           type: string
           example: Слот уже занят
 
-    # ---------- TODO 4: схемы броней ----------
-    # CreateBookingRequest: roomId, startsAt, endsAt — все required
-    # Booking: id, roomId, startsAt, endsAt, status (ACTIVE/CANCELLED),
-    #          bookedBy; required: [id, roomId, startsAt, endsAt, status]
+    # ---------- БРОНИ ----------
+    CreateBookingRequest:
+      type: object
+      required: [roomId, startsAt, endsAt]
+      properties:
+        roomId:
+          type: string
+          example: "7"
+        startsAt:
+          type: string
+          format: date-time
+          example: "2026-12-01T14:00:00Z"
+        endsAt:
+          type: string
+          format: date-time
+          example: "2026-12-01T15:00:00Z"
+
+    Booking:
+      type: object
+      required: [id, roomId, startsAt, endsAt, status]
+      properties:
+        id:
+          type: string
+          example: "b-1042"
+        roomId:
+          type: string
+          example: "7"
+        startsAt:
+          type: string
+          format: date-time
+        endsAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [ACTIVE, CANCELLED]
+          example: ACTIVE
+        bookedBy:
+          type: string
+          description: Логин сотрудника, создавшего бронь
+          example: ann
