@@ -367,7 +367,9 @@
       card.appendChild(el('div', 'lab-branches',
         'Ветка задания: <code>' + esc(lab.branch) + '</code>' +
         (lab.branchSolution ? ' · решение: <code>' + esc(lab.branchSolution) + '</code>' : '') +
-        (lab.hasTests ? ' · проверка: <code>' + esc(lab.testCommand || 'mvn test') + '</code>' : ' · сверяешься с решением')
+        (lab.hasTests
+          ? ' · проверка: <code>' + esc(lab.testCommand || 'mvn test') + '</code>'
+          : (lab.branchSolution ? ' · сверяешься с решением' : ''))
       ));
     }
     var lp = getLessonProgress(lesson.id);
