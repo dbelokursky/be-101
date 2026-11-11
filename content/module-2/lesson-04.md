@@ -4,6 +4,13 @@ title: GraphQL
 module: 2
 moduleTitle: "Проектирование API"
 order: 4
+lab:
+  title: "Лаба 4. GraphQL"
+  description: "Обслужить готовую GraphQL-схему задачника: @QueryMapping и @MutationMapping над готовым хранилищем. Проверка — 6 запросов-тестов и песочница GraphiQL."
+  branch: lab-4
+  branchSolution: lab-4-solution
+  hasTests: true
+  testCommand: mvn test
 ---
 
 # Урок 4. GraphQL: API, где клиент заказывает данные
