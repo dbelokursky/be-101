@@ -6,25 +6,37 @@ import io.micrometer.core.instrument.Timer;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * TODO 1: бизнес-счётчик Counter "orders.created.total" (описание: «Создано заказов»)
- * TODO 2: таймер Timer "orders.create.time" (описание: «Время создания заказа»)
- *
- * Подсказки:
- *   поля регистрируются в конструкторе через MeterRegistry (см. урок 2 модуля);
- *   счётчик — ordersCreated.increment() после создания;
- *   таймер — createTimer.record(elapsed, TimeUnit.NANOSECONDS),
- *   где elapsed = System.nanoTime() - start (start — в начале метода).
+ * Создание заказа, обёрнутое в метрики: счётчик «сколько» и таймер «как долго».
+ * Именно эти значения Prometheus заберёт с /actuator/metrics.
  */
 @Service
 public class OrderService {
 
     private final AtomicLong sequence = new AtomicLong();
 
+    private final Counter ordersCreated;
+    private final Timer createTimer;
+
+    public OrderService(MeterRegistry registry) {
+        this.ordersCreated = Counter.builder("orders.created.total")
+                .description("Создано заказов")
+                .register(registry);
+        this.createTimer = Timer.builder("orders.create.time")
+                .description("Время создания заказа")
+                .register(registry);
+    }
+
     public Order create(BigDecimal amount, String customer) {
-        // TODO: замер времени и публикация метрик
-        return new Order(sequence.incrementAndGet(), customer, amount);
+        long start = System.nanoTime();
+        try {
+            return new Order(sequence.incrementAndGet(), customer, amount);
+        } finally {
+            ordersCreated.increment();
+            createTimer.record(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+        }
     }
 }
