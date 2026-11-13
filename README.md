@@ -12,11 +12,8 @@
 
 Прогресс хранится локально в твоём браузере (localStorage) — никуда не отправляется.
 
-> **Онлайн-версия (GitHub Pages)**: включается одной командой —
-> `gh api -X POST repos/dbelokursky/be-101/pages -f build_type=workflow`
-> (для приватного репозитория нужен GitHub Pro; на бесплатном плане репозиторий
-> должен быть публичным). Воркфлоу деплоя готов: `.github/workflows/deploy-pages.yml` —
-> после включения сайт появится на https://dbelokursky.github.io/be-101/ при первом пуше.
+> **Онлайн-версия**: <https://dbelokursky.github.io/be-101/> — сайт деплоится
+> автоматически при изменении `site/` в `main` (воркфлоу `.github/workflows/deploy-pages.yml`).
 
 ## Как учиться
 
