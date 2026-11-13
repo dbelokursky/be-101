@@ -1,0 +1,46 @@
+# Деплой курса на GitHub Pages.
+#
+# ВАЖНО: Pages должен быть включён в настройках репозитория (одна команда,
+# требует GitHub Pro для приватного репо или публичного репо):
+#
+#   gh api -X POST repos/dbelokursky/be-101/pages -f build_type=workflow
+#
+# После включения деплой произойдёт при следующем пуше в main с правками site/.
+# Ручной запуск: Actions → Deploy course → Run workflow.
+#
+# URL после включения: https://dbelokursky.github.io/be-101/
+
+name: Deploy course to Pages
+
+on:
+  push:
+    branches: [main]
+    paths: ['site/**']
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
