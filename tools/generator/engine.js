@@ -571,8 +571,26 @@
       root.querySelector('.case-head').appendChild(
         el('span', 'case-done-badge', '✓ разобран'));
       btn.disabled = true;
+      again.style.display = '';
       updateSidebar();
     });
+
+    // переигрывание: спрятать эталон и попробовать снова
+    var again = el('button', 'btn small case-again', '↺ Скрыть эталон и попробовать снова');
+    again.type = 'button';
+    again.style.display = done ? '' : 'none';
+    again.addEventListener('click', function () {
+      setCaseDone(lesson.id, caseIndex, false);
+      ref.classList.remove('show');
+      area.value = '';
+      area.disabled = false;
+      btn.disabled = true;
+      again.style.display = 'none';
+      var badge = root.querySelector('.case-done-badge');
+      if (badge) badge.remove();
+      updateSidebar();
+    });
+    root.appendChild(again);
 
     slotEl.innerHTML = '';
     slotEl.appendChild(root);
@@ -641,6 +659,63 @@
       var idx = Number(slot.dataset.case);
       if (lesson.cases[idx]) mountCase(slot, lesson, idx);
     });
+
+    // страница и с кейсом, и с квизом (экзамены) → вкладки «Кейс / Экзамен»
+    var caseSlot = article.querySelector('.case-slot');
+    var quizSlot = article.querySelector('.quiz-slot');
+    if (caseSlot && quizSlot) {
+      var tabs = el('div', 'exam-tabs');
+      var tabRow = el('div', 'exam-tab-row');
+      var paneCase = el('div', 'exam-pane');
+      var paneExam = el('div', 'exam-pane');
+      var btnCase = el('button', 'exam-tab', 'Кейс');
+      var btnExam = el('button', 'exam-tab', 'Экзамен');
+      btnCase.type = 'button';
+      btnExam.type = 'button';
+      function showTab(which) {
+        btnCase.classList.toggle('active', which === 'case');
+        btnExam.classList.toggle('active', which === 'exam');
+        paneCase.classList.toggle('show', which === 'case');
+        paneExam.classList.toggle('show', which === 'exam');
+      }
+      btnCase.addEventListener('click', function () { showTab('case'); });
+      btnExam.addEventListener('click', function () { showTab('exam'); });
+      tabRow.appendChild(btnCase);
+      tabRow.appendChild(btnExam);
+      tabs.appendChild(tabRow);
+      caseSlot.parentNode.insertBefore(tabs, caseSlot);
+      paneCase.appendChild(caseSlot);
+      paneExam.appendChild(quizSlot);
+      tabs.appendChild(paneCase);
+      tabs.appendChild(paneExam);
+      var lp = getLessonProgress(lesson.id);
+      showTab(lp.caseDone && lp.caseDone[0] ? 'exam' : 'case');
+    }
+
+    // «продолжить с места» на первой странице для вернувшихся
+    if (findLessonIndex(lesson.id) === 0) {
+      var anyDone = false;
+      for (var ai = 0; ai < LESSONS.length; ai++) {
+        if (lessonDoneUnits(LESSONS[ai]) > 0) { anyDone = true; break; }
+      }
+      if (anyDone) {
+        var nextTarget = null;
+        for (var ni = 0; ni < LESSONS.length; ni++) {
+          var NL = LESSONS[ni];
+          if (lessonUnits(NL) > 0 && lessonDoneUnits(NL) < lessonUnits(NL)) {
+            nextTarget = NL;
+            break;
+          }
+        }
+        if (nextTarget) {
+          var banner = el('a', 'continue-banner');
+          banner.href = '#/' + nextTarget.id;
+          banner.innerHTML = '▶ Продолжить с места: <b>' +
+            esc(nextTarget.order + '. ' + nextTarget.title) + '</b>';
+          article.insertBefore(banner, article.firstChild);
+        }
+      }
+    }
 
     // спец-страницы и навигация
     if (lesson.id === 'course-finish') mountFinishHero(article);

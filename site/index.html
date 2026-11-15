@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E%F0%9F%8E%93%3C/text%3E%3C/svg%3E">
 <title>BE-101 — Бэкенд для смежных специальностей</title>
 <style>
 /* BE-101 — стили курса */
@@ -413,6 +414,51 @@ body {
   margin-top: 10px; font-size: 14px; line-height: 1.6;
 }
 .quiz-review a { color: var(--accent); font-weight: 600; }
+
+/* ---------- вкладки «Кейс / Экзамен» ---------- */
+
+.exam-tabs {
+  margin-top: 30px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  overflow: hidden;
+}
+.exam-tab-row {
+  display: flex; gap: 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+.exam-tab {
+  flex: 1; padding: 12px 16px;
+  background: none; border: none; cursor: pointer;
+  font-family: inherit; font-size: 14.5px; font-weight: 600;
+  color: var(--ink-soft);
+  border-bottom: 2px solid transparent;
+}
+.exam-tab.active {
+  color: var(--accent);
+  background: var(--paper);
+  border-bottom-color: var(--accent);
+}
+.exam-pane { display: none; padding: 8px 18px 18px; }
+.exam-pane.show { display: block; }
+
+/* ---------- «продолжить с места» ---------- */
+
+.continue-banner {
+  display: block;
+  margin: 0 0 22px; padding: 13px 18px;
+  background: var(--accent-soft);
+  border: 1px solid #d5dcfb;
+  border-radius: 10px;
+  color: var(--ink); text-decoration: none;
+  font-size: 14.5px;
+}
+.continue-banner:hover { border-color: var(--accent); }
+.continue-banner b { color: var(--accent); }
+
+.case-again { margin-top: 10px; background: none; color: var(--ink-soft); border: 1.5px solid var(--line); }
 
 /* ---------- прочее ---------- */
 
@@ -1010,8 +1056,26 @@ window.BE101 = {"lessons":[{"id":"lesson-01","title":"Клиент–серве�
       root.querySelector('.case-head').appendChild(
         el('span', 'case-done-badge', '✓ разобран'));
       btn.disabled = true;
+      again.style.display = '';
       updateSidebar();
     });
+
+    // переигрывание: спрятать эталон и попробовать снова
+    var again = el('button', 'btn small case-again', '↺ Скрыть эталон и попробовать снова');
+    again.type = 'button';
+    again.style.display = done ? '' : 'none';
+    again.addEventListener('click', function () {
+      setCaseDone(lesson.id, caseIndex, false);
+      ref.classList.remove('show');
+      area.value = '';
+      area.disabled = false;
+      btn.disabled = true;
+      again.style.display = 'none';
+      var badge = root.querySelector('.case-done-badge');
+      if (badge) badge.remove();
+      updateSidebar();
+    });
+    root.appendChild(again);
 
     slotEl.innerHTML = '';
     slotEl.appendChild(root);
@@ -1080,6 +1144,63 @@ window.BE101 = {"lessons":[{"id":"lesson-01","title":"Клиент–серве�
       var idx = Number(slot.dataset.case);
       if (lesson.cases[idx]) mountCase(slot, lesson, idx);
     });
+
+    // страница и с кейсом, и с квизом (экзамены) → вкладки «Кейс / Экзамен»
+    var caseSlot = article.querySelector('.case-slot');
+    var quizSlot = article.querySelector('.quiz-slot');
+    if (caseSlot && quizSlot) {
+      var tabs = el('div', 'exam-tabs');
+      var tabRow = el('div', 'exam-tab-row');
+      var paneCase = el('div', 'exam-pane');
+      var paneExam = el('div', 'exam-pane');
+      var btnCase = el('button', 'exam-tab', 'Кейс');
+      var btnExam = el('button', 'exam-tab', 'Экзамен');
+      btnCase.type = 'button';
+      btnExam.type = 'button';
+      function showTab(which) {
+        btnCase.classList.toggle('active', which === 'case');
+        btnExam.classList.toggle('active', which === 'exam');
+        paneCase.classList.toggle('show', which === 'case');
+        paneExam.classList.toggle('show', which === 'exam');
+      }
+      btnCase.addEventListener('click', function () { showTab('case'); });
+      btnExam.addEventListener('click', function () { showTab('exam'); });
+      tabRow.appendChild(btnCase);
+      tabRow.appendChild(btnExam);
+      tabs.appendChild(tabRow);
+      caseSlot.parentNode.insertBefore(tabs, caseSlot);
+      paneCase.appendChild(caseSlot);
+      paneExam.appendChild(quizSlot);
+      tabs.appendChild(paneCase);
+      tabs.appendChild(paneExam);
+      var lp = getLessonProgress(lesson.id);
+      showTab(lp.caseDone && lp.caseDone[0] ? 'exam' : 'case');
+    }
+
+    // «продолжить с места» на первой странице для вернувшихся
+    if (findLessonIndex(lesson.id) === 0) {
+      var anyDone = false;
+      for (var ai = 0; ai < LESSONS.length; ai++) {
+        if (lessonDoneUnits(LESSONS[ai]) > 0) { anyDone = true; break; }
+      }
+      if (anyDone) {
+        var nextTarget = null;
+        for (var ni = 0; ni < LESSONS.length; ni++) {
+          var NL = LESSONS[ni];
+          if (lessonUnits(NL) > 0 && lessonDoneUnits(NL) < lessonUnits(NL)) {
+            nextTarget = NL;
+            break;
+          }
+        }
+        if (nextTarget) {
+          var banner = el('a', 'continue-banner');
+          banner.href = '#/' + nextTarget.id;
+          banner.innerHTML = '▶ Продолжить с места: <b>' +
+            esc(nextTarget.order + '. ' + nextTarget.title) + '</b>';
+          article.insertBefore(banner, article.firstChild);
+        }
+      }
+    }
 
     // спец-страницы и навигация
     if (lesson.id === 'course-finish') mountFinishHero(article);
