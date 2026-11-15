@@ -452,6 +452,31 @@ body {
 
 .case-again { margin-top: 10px; background: none; color: var(--ink-soft); border: 1.5px solid var(--line); }
 
+/* ---------- печать ---------- */
+
+@media print {
+  .sidebar, .lesson-nav, .quiz, .case, .trainer, .continue-banner,
+  .exam-tab-row, .lab-check, .case-note, .case-again, .btn {
+    display: none !important;
+  }
+  body { background: #fff; font-size: 12pt; }
+  #app { display: block; }
+  .content { padding: 0; }
+  .lesson { max-width: 100%; }
+  .lesson pre, .question-code {
+    background: #f4f4f4 !important;
+    color: #111 !important;
+    border: 1px solid #ccc;
+    white-space: pre-wrap;
+  }
+  .lesson pre code { color: inherit; }
+  .exam-pane { display: block !important; }
+  .mermaid { break-inside: avoid; }
+  .lesson h2 { break-after: avoid; }
+  .lesson table, .lesson pre { break-inside: avoid; }
+  a { color: inherit; text-decoration: none; }
+}
+
 /* ---------- прочее ---------- */
 
 .empty { padding: 60px; text-align: center; color: var(--ink-soft); }
