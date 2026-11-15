@@ -4,7 +4,27 @@
 
   var LESSONS = (window.BE101 && window.BE101.lessons) || [];
   var STORE_KEY = 'be101.progress.v1';
+  var THEME_KEY = 'be101.theme';
   var PASS_RATIO = 0.8; // порог сдачи квиза: 80%+
+
+  // ---------- тема (светлая/тёмная) ----------
+
+  function currentTheme() {
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  }
+  function applyTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    try { localStorage.setItem(THEME_KEY, t); } catch (_) { /* приватный режим */ }
+  }
+  (function initTheme() {
+    var t = null;
+    try { t = localStorage.getItem(THEME_KEY); } catch (_) { /* ignore */ }
+    if (!t) {
+      t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
 
   // ---------- утилиты ----------
 
@@ -107,7 +127,17 @@
     var wrap = el('aside', 'sidebar');
 
     var brand = el('div', 'brand');
-    brand.appendChild(el('div', 'brand-title', 'BE‑101'));
+    var brandRow = el('div', 'brand-row');
+    brandRow.appendChild(el('div', 'brand-title', 'BE‑101'));
+    var themeBtn = el('button', 'theme-toggle', currentTheme() === 'dark' ? '☀️' : '🌙');
+    themeBtn.type = 'button';
+    themeBtn.title = 'Переключить тему';
+    themeBtn.addEventListener('click', function () {
+      applyTheme(currentTheme() === 'dark' ? 'light' : 'dark');
+      render(); // перекрасить mermaid и иконку
+    });
+    brandRow.appendChild(themeBtn);
+    brand.appendChild(brandRow);
     brand.appendChild(el('div', 'brand-sub', 'Бэкенд для смежных специальностей'));
     wrap.appendChild(brand);
 
@@ -692,6 +722,29 @@
       showTab(lp.caseDone && lp.caseDone[0] ? 'exam' : 'case');
     }
 
+    // оглавление урока по разделам (h2), если их много
+    var heads = article.querySelectorAll('.lesson h2');
+    if (heads.length >= 4) {
+      var toc = el('div', 'lesson-toc');
+      toc.appendChild(el('div', 'lesson-toc-title', 'В этом уроке'));
+      var tocList = el('div', 'lesson-toc-list');
+      heads.forEach(function (h, i) {
+        var link = el('button', 'lesson-toc-link', esc(h.textContent));
+        link.type = 'button';
+        link.addEventListener('click', function () {
+          h.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        tocList.appendChild(link);
+      });
+      toc.appendChild(tocList);
+      var h1 = article.querySelector('h1');
+      if (h1 && h1.nextSibling) {
+        article.insertBefore(toc, h1.nextSibling);
+      } else {
+        article.insertBefore(toc, article.firstChild);
+      }
+    }
+
     // «продолжить с места» на первой странице для вернувшихся
     if (findLessonIndex(lesson.id) === 0) {
       var anyDone = false;
@@ -725,7 +778,11 @@
     // mermaid-диаграммы
     if (window.mermaid) {
       try {
-        window.mermaid.initialize({ startOnLoad: false, theme: 'neutral', locale: 'ru' });
+        window.mermaid.initialize({
+          startOnLoad: false,
+          theme: currentTheme() === 'dark' ? 'dark' : 'neutral',
+          locale: 'ru',
+        });
         var nodes = article.querySelectorAll('.mermaid');
         if (nodes.length) window.mermaid.run({ nodes: nodes });
       } catch (_) { /* диаграммы не критичны */ }

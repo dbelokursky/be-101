@@ -19,6 +19,41 @@
   --content-w: 780px;
 }
 
+[data-theme="dark"] {
+  --bg: #14161c;
+  --paper: #1c1f27;
+  --ink: #e5e8ef;
+  --ink-soft: #9aa3b2;
+  --line: #2c313c;
+  --accent: #7c94f0;
+  --accent-soft: #232a3d;
+  --ok: #4cc38a;
+  --ok-soft: #1d2b24;
+  --fail: #e5737f;
+  --fail-soft: #33201f;
+  --code-bg: #10131a;
+  --code-ink: #dfe4ee;
+}
+
+/* тёмная тема: подсветка кода (hljs генерился под светлый фон) */
+[data-theme="dark"] .hljs { color: #dfe4ee; }
+[data-theme="dark"] .hljs-keyword,
+[data-theme="dark"] .hljs-selector-tag,
+[data-theme="dark"] .hljs-literal { color: #c792ea; }
+[data-theme="dark"] .hljs-string,
+[data-theme="dark"] .hljs-attr { color: #a5d6a7; }
+[data-theme="dark"] .hljs-title,
+[data-theme="dark"] .hljs-name,
+[data-theme="dark"] .hljs-type { color: #82aaff; }
+[data-theme="dark"] .hljs-number { color: #f78c6c; }
+[data-theme="dark"] .hljs-comment,
+[data-theme="dark"] .hljs-quote { color: #5c6472; font-style: italic; }
+[data-theme="dark"] .mermaid { filter: saturate(0.9); }
+[data-theme="dark"] .finish-hero { background: #20242e; }
+[data-theme="dark"] .trainer { background: #20242e; }
+[data-theme="dark"] .case,
+[data-theme="dark"] .quiz { background: var(--paper); }
+
 * { box-sizing: border-box; }
 
 html { scroll-behavior: smooth; }
@@ -48,7 +83,33 @@ body {
   overflow-y: auto;
 }
 
+.brand-row { display: flex; align-items: center; justify-content: space-between; }
 .brand-title { font-size: 22px; font-weight: 800; letter-spacing: .3px; }
+.theme-toggle {
+  background: none; border: 1.5px solid var(--line); border-radius: 8px;
+  width: 34px; height: 34px; font-size: 16px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.theme-toggle:hover { border-color: var(--accent); }
+
+/* ---------- оглавление урока ---------- */
+
+.lesson-toc {
+  margin: 14px 0 22px; padding: 14px 18px;
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.lesson-toc-title {
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .6px; color: var(--ink-soft); margin-bottom: 8px;
+}
+.lesson-toc-list { display: flex; flex-direction: column; gap: 4px; }
+.lesson-toc-link {
+  background: none; border: none; padding: 2px 0; cursor: pointer;
+  font-family: inherit; font-size: 14px; text-align: left;
+  color: var(--accent);
+}
+.lesson-toc-link:hover { text-decoration: underline; }
 .brand-sub { font-size: 12.5px; color: var(--ink-soft); margin-top: 2px; }
 
 .module-progress { margin: 22px 0 18px; }
