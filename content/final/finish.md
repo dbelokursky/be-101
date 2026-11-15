@@ -3,7 +3,7 @@ id: course-finish
 title: "Финал курса"
 module: 6
 moduleTitle: "Повторение и финал"
-order: 2
+order: 3
 ---
 
 # Финал курса BE-101
