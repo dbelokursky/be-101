@@ -66,6 +66,7 @@ reference: |
 
 ```quiz
 - type: single
+  topic: m3-lesson-01
   question: "Колонка tasks.project_id ссылается на projects.id. Что защищает FOREIGN KEY?"
   options:
     - "Нельзя вставить задачу с project_id, которого нет в projects"
@@ -76,6 +77,7 @@ reference: |
   explanation: "FK — ссылочная целостность на вставку/обновление. Удаление проекта с задачами СУБД запретит или каскадно обработает — по правилу ON DELETE, которое задаётся отдельно."
 
 - type: single
+  topic: m3-lesson-01
   codeLang: sql
   code: |
     SELECT p.name, COUNT(t.id) AS open_cnt
@@ -92,6 +94,7 @@ reference: |
   explanation: "LEFT JOIN сохраняет левую сторону: проектов без пары COUNT(t.id) посчитает 0. INNER JOIN выкинет их. «Отчёт, где исчезли пустые проекты» — типичный баг замены JOIN'а."
 
 - type: multi
+  topic: m3-lesson-03
   question: "Признаки N+1 в приложении? (несколько ответов)"
   options:
     - "В SQL-логах лес однотипных SELECT ... WHERE id = ? / project_id = ?"
@@ -102,6 +105,7 @@ reference: |
   explanation: "N+1 — линейная зависимость числа запросов от данных. Три симптома вместе — почти диагноз; подтверждается статистикой Hibernate или счётчиком запросов."
 
 - type: single
+  topic: m3-lesson-03
   question: "Какой запрос решит «проекты с количеством задач» за одну поездку в базу, не грузя задачи?"
   options:
     - "Проекция: select p.name, count(t) from Project p left join p.tasks t group by p.name"
@@ -112,6 +116,7 @@ reference: |
   explanation: "Считать должна база: агрегат с GROUP BY вернёт готовые цифры. JOIN FETCH здесь даже вреден — он тащит все задачи, чтобы их посчитать в Java."
 
 - type: single
+  topic: m3-lesson-02
   codeLang: java
   code: |
     @Transactional
@@ -130,6 +135,7 @@ reference: |
   explanation: "Managed-entity в открытой сессии сравнивается со снимком; изменённое поле даёт UPDATE при коммите. Явный save() для управляемых сущностей не нужен."
 
 - type: single
+  topic: m3-lesson-02
   question: "@ManyToOne со значением EAGER: чем опасно?"
   options:
     - "Связанная сущность грузится всегда и везде, раздувая каждый запрос и цепляясь каскадом дальше"
@@ -140,6 +146,7 @@ reference: |
   explanation: "Дефолт — не синоним «правильно». EAGR тянет связь даже там, где не просят; ставьте LAZY и догружайте точечно (FETCH/EntityGraph)."
 
 - type: blank
+  topic: m3-lesson-02
   question: "Какое исключение получит код, обратившийся к ленивой связи ПОСЛЕ закрытия транзакции? (три слова, Latent... нет — просто назовите: LazyInitialization...)"
   answers:
     - "LazyInitializationException"
@@ -147,6 +154,7 @@ reference: |
   explanation: "LazyInitializationException: прокси не может догрузить данные в закрытой сессии. Лечение — загрузить связь внутри транзакции."
 
 - type: single
+  topic: m3-lesson-04
   question: "Две транзакции параллельно уменьшают остаток (qty=1) обычным «прочитал-проверил-записал». Сколько товара будет продано?"
   options:
     - "Два — каждая транзакция видела остаток 1 и прошла успешно: классическая гонка"
@@ -157,6 +165,7 @@ reference: |
   explanation: "READ COMMITTED не сериализует «прочитал-проверил-записал». Нужны SELECT FOR UPDATE, @Version или атомарный UPDATE с WHERE qty > 0."
 
 - type: match
+  topic: m3-lesson-04
   question: "Сопоставьте инструмент борьбы с гонкой и его поведение."
   pairs:
     - left: "PESSIMISTIC_WRITE"
@@ -169,6 +178,7 @@ reference: |
       right: "Не решение: гонка остаётся"
 
 - type: single
+  topic: m3-lesson-04
   question: "Метод @Transactional сделал UPDATE и выбросил NullPointerException. Что в базе?"
   options:
     - "Ничего: RuntimeException → откат транзакции"
@@ -179,6 +189,7 @@ reference: |
   explanation: "Атомарность: unchecked-исключение откатывает всё, что сделано в методе. Для checked по умолчанию — коммит (вопрос из урока 4)."
 
 - type: multi
+  topic: m3-lesson-05
   question: "Что верно про changeset'ы Liquibase? (несколько ответов)"
   options:
     - "Применённый changeset нельзя редактировать: чек-сумма в DATABASECHANGELOG не совпадёт"
@@ -189,6 +200,7 @@ reference: |
   explanation: "Редактирование применённого changeset'а — способ уронить старт приложения на проде. История неизменна, изменения только добавляются."
 
 - type: single
+  topic: m3-lesson-05
   question: "Безопасный способ убрать колонку, которую ещё читает работающий код?"
   options:
     - "Expand-contract: сначала новый вариант схемы и запись в оба места, потом выкатка кода без старой колонки, потом удаление"
@@ -199,6 +211,7 @@ reference: |
   explanation: "Окно несовместимости должно быть пустым. «Упадёт — откатим» на проде с данными — не стратегия, а инцидент."
 
 - type: single
+  topic: m3-lesson-05
   question: "Что делает ddl-auto: validate в связке с Liquibase?"
   options:
     - "Проверяет соответствие entity схеме при старте: расхождение — приложение не поднимется"
@@ -209,6 +222,7 @@ reference: |
   explanation: "Схемой управляет Liquibase, а validate ловит расхождение между кодом и базой на старте — ранняя, громкая ошибка вместо тихого рантайма."
 
 - type: blank
+  topic: m3-lesson-05
   question: "Как называется подход к интеграционным тестам, поднимающий настоящую PostgreSQL в Docker? (одно слово, имя инструмента)"
   answers:
     - "Testcontainers"
@@ -216,6 +230,7 @@ reference: |
   explanation: "Testcontainers: контейнер с реальной СУБД на время теста. Диалект, индексы, блокировки и миграции — как в проде."
 
 - type: single
+  topic: m3-lesson-03
   question: "Итог модуля. Отчёт «проекты с числом открытых задач» на проде тормозит, в логах сотни SELECT'ов по project_id. Ваш первый шаг?"
   options:
     - "Посчитать в базе: агрегат-проекция с GROUP BY вместо загрузки задач в Java; при загрузке списков — EntityGraph/JOIN FETCH"

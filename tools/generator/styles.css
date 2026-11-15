@@ -348,6 +348,65 @@ body {
 }
 .lab-check input { width: 17px; height: 17px; accent-color: var(--ok); }
 
+/* ---------- навигация по урокам ---------- */
+
+.lesson-nav {
+  display: flex; justify-content: space-between; gap: 14px;
+  margin-top: 46px; padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.lesson-nav-link {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 12px 16px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--paper);
+  text-decoration: none; color: var(--ink);
+  max-width: 46%;
+  transition: border-color .12s, background .12s;
+}
+.lesson-nav-link:hover { border-color: var(--accent); background: var(--accent-soft); }
+.lesson-nav-link.next { margin-left: auto; text-align: right; }
+.lesson-nav-label { font-size: 12px; color: var(--accent); font-weight: 600; }
+.lesson-nav-title { font-size: 14px; font-weight: 600; line-height: 1.35; }
+.lesson-nav-spacer { max-width: 46%; }
+
+/* ---------- финальный экран ---------- */
+
+.finish-hero {
+  background: linear-gradient(135deg, #eef1fe, #f6fbf3);
+  border: 1px solid var(--line); border-radius: 16px;
+  padding: 28px 28px 22px; margin: 0 0 28px;
+}
+.finish-emoji { font-size: 44px; line-height: 1; margin-bottom: 8px; }
+.finish-heading { font-size: 24px; font-weight: 800; letter-spacing: -.3px; }
+.finish-subline { color: var(--ink-soft); margin: 6px 0 18px; font-size: 15px; }
+.finish-rows { display: flex; flex-direction: column; gap: 12px; }
+.finish-row {
+  display: grid; grid-template-columns: 220px 1fr 44px;
+  gap: 14px; align-items: center;
+}
+.finish-row-title { font-size: 13.5px; font-weight: 600; }
+.finish-row-pct { font-size: 13px; font-weight: 700; text-align: right; color: var(--ink-soft); }
+
+/* ---------- тренажёр ---------- */
+
+.trainer {
+  margin-top: 34px;
+  border: 1.5px dashed var(--accent);
+  background: #f7f9ff;
+  border-radius: 14px; padding: 22px 24px;
+}
+.trainer .btn { margin-bottom: 10px; }
+.trainer-note { font-size: 13px; color: var(--ink-soft); }
+.trainer-holder { margin-top: 16px; }
+.trainer-holder .quiz { box-shadow: none; }
+
+/* ---------- «что перечитать» ---------- */
+
+.quiz-review {
+  margin-top: 10px; font-size: 14px; line-height: 1.6;
+}
+.quiz-review a { color: var(--accent); font-weight: 600; }
+
 /* ---------- прочее ---------- */
 
 .empty { padding: 60px; text-align: center; color: var(--ink-soft); }

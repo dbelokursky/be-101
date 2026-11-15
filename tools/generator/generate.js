@@ -111,6 +111,9 @@ function normalizeQuiz(list, file) {
         if (!p.left || !p.right) throw new Error(`${where}: каждая пара должна иметь left и right`);
       }
     }
+    if (q.topic !== undefined && typeof q.topic !== 'string') {
+      throw new Error(`${where}: topic должен быть строкой (id урока)`);
+    }
     highlightQuizCode(q, file);
     return q;
   });

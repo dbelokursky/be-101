@@ -210,6 +210,7 @@
       order = shuffle(questions.map(function (_, i) { return i; }));
       var correctCount = 0;
       var answeredCount = 0;
+      var okByIndex = {};
 
       order.forEach(function (qi, pos) {
         var q = questions[qi];
@@ -226,6 +227,7 @@
 
         function finish(ok, detailsHtml) {
           correctCount += ok ? 1 : 0;
+          okByIndex[qi] = ok;
           answeredCount++;
           qEl.classList.add(ok ? 'ok' : 'fail');
           area.classList.add('locked');
@@ -234,7 +236,7 @@
             (q.explanation ? '<div class="question-expl">' + esc(q.explanation) + '</div>' : '') +
             (detailsHtml || ''));
           qEl.appendChild(fb);
-          if (answeredCount === questions.length) finishAttempt(correctCount);
+          if (answeredCount === questions.length) finishAttempt(correctCount, okByIndex);
         }
 
         if (q.type === 'single') {
@@ -357,7 +359,7 @@
       });
     }
 
-    function finishAttempt(correctCount) {
+    function finishAttempt(correctCount, okByIndex) {
       var pct = Math.round((correctCount / questions.length) * 100);
       var passed = correctCount / questions.length >= PASS_RATIO;
       setQuizPassed(lesson.id, slotIndex, passed || getLessonProgress(lesson.id).quizPassed[slotIndex]);
@@ -374,6 +376,29 @@
           : '<div class="quiz-note">Нужно ' + Math.round(PASS_RATIO * 100) +
             '%+. Перечитай пояснения выше и попробуй ещё раз — вопросы перемешаются.</div>');
 
+      // «что перечитать»: темы проваленных вопросов (кроме собственных уроков)
+      var wrongTopics = {};
+      questions.forEach(function (q, qi) {
+        if (!okByIndex[qi] && q.topic && q.topic !== lesson.id) wrongTopics[q.topic] = true;
+      });
+      var topicIds = Object.keys(wrongTopics);
+      if (topicIds.length) {
+        var links = [];
+        topicIds.forEach(function (tid) {
+          for (var i = 0; i < LESSONS.length; i++) {
+            if (LESSONS[i].id === tid) {
+              links.push('<a href="#/' + tid + '">' +
+                esc(LESSONS[i].order + '. ' + LESSONS[i].title) + '</a>');
+              break;
+            }
+          }
+        });
+        if (links.length) {
+          result.appendChild(el('div', 'quiz-review',
+            '📖 Перечитать: ' + links.join(' · ')));
+        }
+      }
+
       var retake = el('button', 'btn small', 'Пройти заново');
       retake.type = 'button';
       retake.addEventListener('click', function () {
@@ -386,6 +411,122 @@
     slotEl.innerHTML = '';
     slotEl.appendChild(root);
     startAttempt();
+  }
+
+  // ---------- навигация ←/→ и спец-страницы ----------
+
+  function findLessonIndex(id) {
+    for (var i = 0; i < LESSONS.length; i++) {
+      if (LESSONS[i].id === id) return i;
+    }
+    return -1;
+  }
+
+  function navLink(lesson, dir) {
+    var a = el('a', 'lesson-nav-link ' + dir);
+    a.href = '#/' + lesson.id;
+    a.appendChild(el('span', 'lesson-nav-label',
+      dir === 'prev' ? '← Предыдущий' : 'Следующий →'));
+    a.appendChild(el('span', 'lesson-nav-title', esc(lesson.title)));
+    return a;
+  }
+
+  function appendLessonNav(article, lesson) {
+    var idx = findLessonIndex(lesson.id);
+    if (idx < 0) return;
+    var nav = el('div', 'lesson-nav');
+    nav.appendChild(idx > 0 ? navLink(LESSONS[idx - 1], 'prev')
+                            : el('span', 'lesson-nav-spacer'));
+    nav.appendChild(idx < LESSONS.length - 1 ? navLink(LESSONS[idx + 1], 'next')
+                                             : el('span', 'lesson-nav-spacer'));
+    article.appendChild(nav);
+  }
+
+  // финальный экран: сводный прогресс по всем модулям (динамическая шапка)
+  function mountFinishHero(article) {
+    var hero = el('div', 'finish-hero');
+
+    var total = 0, done = 0;
+    var modules = [];
+    var byNum = {};
+    LESSONS.forEach(function (l) {
+      if (!byNum[l.module]) {
+        byNum[l.module] = { title: l.moduleTitle || ('Модуль ' + l.module), lessons: [] };
+        modules.push(byNum[l.module]);
+      }
+      byNum[l.module].lessons.push(l);
+      total += lessonUnits(l);
+      done += lessonDoneUnits(l);
+    });
+    var pct = total ? Math.round((done / total) * 100) : 0;
+
+    hero.appendChild(el('div', 'finish-emoji', pct >= 100 ? '🏆' : '🎓'));
+    hero.appendChild(el('div', 'finish-heading',
+      pct >= 100 ? 'Курс пройден полностью!' : 'Твой прогресс по курсу'));
+    hero.appendChild(el('div', 'finish-subline',
+      'Пройдено <b>' + done + '</b> из <b>' + total + '</b> юнитов (' + pct + '%)' +
+      (pct >= 100 ? '' : ' — возвращайся к незакрытым квизам, лабам и кейсам')));
+
+    var rows = el('div', 'finish-rows');
+    modules.forEach(function (m) {
+      var t = 0, d = 0;
+      m.lessons.forEach(function (l) { t += lessonUnits(l); d += lessonDoneUnits(l); });
+      var p = t ? Math.round((d / t) * 100) : 0;
+      var row = el('div', 'finish-row');
+      row.appendChild(el('div', 'finish-row-title', esc(m.title)));
+      var bar = el('div', 'module-progress-bar');
+      var fill = el('div', 'module-progress-fill');
+      fill.style.width = p + '%';
+      bar.appendChild(fill);
+      row.appendChild(bar);
+      row.appendChild(el('div', 'finish-row-pct', p + '%'));
+      rows.appendChild(row);
+    });
+    hero.appendChild(rows);
+    article.insertBefore(hero, article.firstChild);
+  }
+
+  // тренажёр: N случайных вопросов из пройденных уроков
+  function mountTrainer(article) {
+    var wrap = el('div', 'trainer');
+    var btn = el('button', 'btn', 'Собрать сет из 10 вопросов');
+    btn.type = 'button';
+    wrap.appendChild(btn);
+    var note = el('div', 'trainer-note',
+      'Вопросы берутся из уроков, которые вы уже начали проходить; если таких меньше — из всего курса.');
+    wrap.appendChild(note);
+    var holder = el('div', 'trainer-holder');
+    wrap.appendChild(holder);
+    article.appendChild(wrap);
+
+    btn.addEventListener('click', function () {
+      var started = LESSONS.filter(function (l) {
+        var lp = getLessonProgress(l.id);
+        for (var i = 0; i < l.quizzes.length; i++) {
+          if (lp.quizPassed[i]) return true;
+        }
+        return false;
+      });
+      var source = started.length ? started : LESSONS;
+      var pool = [];
+      source.forEach(function (l) {
+        l.quizzes.forEach(function (q) { pool = pool.concat(q); });
+      });
+      var picked = shuffle(pool).slice(0, 10);
+      holder.innerHTML = '';
+      mountQuiz(holder, {
+        id: 'trainer-session',
+        title: 'Тренажёр',
+        module: 0,
+        moduleTitle: null,
+        order: 0,
+        lab: null,
+        html: '',
+        quizzes: [picked],
+        cases: [],
+      }, 0);
+      holder.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }
 
   // ---------- кейс (textarea + эталонный разбор) ----------
@@ -500,6 +641,11 @@
       var idx = Number(slot.dataset.case);
       if (lesson.cases[idx]) mountCase(slot, lesson, idx);
     });
+
+    // спец-страницы и навигация
+    if (lesson.id === 'course-finish') mountFinishHero(article);
+    if (lesson.id === 'course-trainer') mountTrainer(article);
+    appendLessonNav(article, lesson);
 
     // mermaid-диаграммы
     if (window.mermaid) {
