@@ -517,7 +517,20 @@ body {
 .exam-pane { display: none; padding: 8px 18px 18px; }
 .exam-pane.show { display: block; }
 
-/* ---------- «продолжить с места» ---------- */
+/* ---------- онбординг ---------- */
+
+.onboarding {
+  margin: 0 0 22px; padding: 18px 20px;
+  background: var(--accent-soft);
+  border: 1px solid var(--banner-line);
+  border-radius: 12px;
+}
+.onboarding-title { font-weight: 700; margin-bottom: 10px; }
+.onboarding-list { margin: 0 0 14px; padding-left: 20px; }
+.onboarding-list li { margin: 5px 0; font-size: 14.5px; }
+.onboarding code { background: var(--inline-code); }
+
+/* ---------- «продолжить с местом» ---------- */
 
 .continue-banner {
   display: block;

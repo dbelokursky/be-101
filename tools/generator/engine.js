@@ -745,6 +745,27 @@
       }
     }
 
+    // онбординг первого входа: правила игры один раз
+    var seenOnboarding = false;
+    try { seenOnboarding = localStorage.getItem('be101.onboarded') === '1'; } catch (_) { /* ignore */ }
+    if (!seenOnboarding && findLessonIndex(lesson.id) === 0) {
+      try { localStorage.setItem('be101.onboarded', '1'); } catch (_) { /* ignore */ }
+      var onb = el('div', 'onboarding');
+      onb.appendChild(el('div', 'onboarding-title', '👋 Как проходить курс'));
+      var onbList = el('ul', 'onboarding-list',
+        '<li><b>Урок → квиз.</b> Отвечаешь — сразу видишь пояснение «почему». Порог сдачи — 80%, пересдачи не ограничены</li>' +
+        '<li><b>Лабораторные</b> — настоящий Java-код в ветках этого репозитория: <code>git checkout lab-N</code>. Инструкция — в карточке урока</li>' +
+        '<li><b>Экзамен модуля</b> — в конце каждого модуля, с кейсом. Ошибся — покажем, что перечитать</li>');
+      onb.appendChild(onbList);
+      var onbClose = el('button', 'btn small', 'Понятно, поехали');
+      onbClose.type = 'button';
+      onbClose.addEventListener('click', function () {
+        onb.remove();
+      });
+      onb.appendChild(onbClose);
+      article.insertBefore(onb, article.firstChild);
+    }
+
     // «продолжить с места» на первой странице для вернувшихся
     if (findLessonIndex(lesson.id) === 0) {
       var anyDone = false;
