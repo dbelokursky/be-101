@@ -4,6 +4,13 @@ title: "Интеграционные: Spring и MockMvc"
 module: 6
 moduleTitle: "Тесты на бэкенде"
 order: 3
+lab:
+  title: "Лаба 9. Спаси прод"
+  description: "Два инцидента в API задач: понять по красным приёмным тестам, починить контроллер и закрыть баги собственными регрессионными тестами."
+  branch: lab-9
+  branchSolution: lab-9-solution
+  hasTests: true
+  testCommand: mvn test
 ---
 
 # Урок 3. Интеграционные тесты: Spring и MockMvc

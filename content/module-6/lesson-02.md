@@ -4,6 +4,13 @@ title: "JUnit и Mockito: юнит-тесты"
 module: 6
 moduleTitle: "Тесты на бэкенде"
 order: 2
+lab:
+  title: "Лаба 8. Юнит-тесты"
+  description: "Написать юнит-тесты готового сервиса скидок на все ветки. Приёмник — правило JaCoCo: mvn test не пройдёт при покрытии ниже 80%."
+  branch: lab-8
+  branchSolution: lab-8-solution
+  hasTests: true
+  testCommand: mvn test
 ---
 
 # Урок 2. JUnit и Mockito: юнит-тесты
