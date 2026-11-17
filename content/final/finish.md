@@ -4,6 +4,13 @@ title: "Финал курса"
 module: 7
 moduleTitle: "Повторение и финал"
 order: 4
+lab:
+  title: "Лаба 10. Capstone — сервис заказов целиком"
+  description: "Выпускной проект: REST + валидация + Liquibase + Kafka-событие + бизнес-метрика в одном сервисе. Обвязка и приёмные тесты на весь курс — Java-слой ваш. Проверка: mvn test 6/6."
+  branch: lab-10
+  branchSolution: lab-10-solution
+  hasTests: true
+  testCommand: mvn test
 ---
 
 # Финал курса BE-101

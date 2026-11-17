@@ -1,0 +1,30 @@
+# Автопроверка лаб: любой пуш в ветку lab-* прогоняет mvn test этой ветки.
+#
+# Как студенту провериться через CI:
+#   1. Форкните репозиторий
+#   2. Переключитесь на ветку лабы: git checkout lab-2
+#   3. Пишите код, коммитьте и пушьте в СВОЙ форк
+#   4. Вкладка Actions форка покажет «Lab check»: зелёный = лаба сдана
+#
+# Ручной запуск из интерфейса: Actions → Lab check → Run workflow → выбрать ветку.
+name: Lab check
+
+on:
+  push:
+    branches: ['lab-*']
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: mvn test (приёмник лабы этой ветки)
+        run: mvn -B test
