@@ -1,7 +1,7 @@
 ---
 id: course-glossary
 title: Глоссарий курса
-module: 6
+module: 7
 moduleTitle: "Повторение и финал"
 order: 2
 ---
