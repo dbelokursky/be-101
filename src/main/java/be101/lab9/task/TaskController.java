@@ -43,7 +43,8 @@ public class TaskController {
     }
 
     @PostMapping
-    public Task create(@RequestBody CreateTaskRequest request) {
+    @ResponseStatus(HttpStatus.CREATED)
+    public Task create(@jakarta.validation.Valid @RequestBody CreateTaskRequest request) {
         return taskStore.save(request.title());
     }
 
