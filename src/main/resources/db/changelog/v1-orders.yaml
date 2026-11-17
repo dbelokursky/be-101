@@ -1,0 +1,27 @@
+# ГОТОВО: схема заказов. ddl-auto: validate сверит вашу entity с ней (лаба 5).
+databaseChangeLog:
+  - changeSet:
+      id: create-orders
+      author: be101
+      changes:
+        - createTable:
+            tableName: orders
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints: { primaryKey: true, nullable: false }
+              - column:
+                  name: customer
+                  type: varchar(100)
+                  constraints: { nullable: false }
+              - column:
+                  name: amount
+                  type: numeric(19,2)
+                  constraints: { nullable: false }
+              - column:
+                  name: status
+                  type: varchar(20)
+                  defaultValue: 'NEW'
+                  constraints: { nullable: false }

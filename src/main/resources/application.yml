@@ -1,0 +1,33 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: be-101-lab-10
+  datasource:
+    url: jdbc:h2:mem:orders
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      # схему создаёт Liquibase; Hibernate сверяет entity со схемой (лаба 5)
+      ddl-auto: validate
+    open-in-view: false
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "be101.lab10.order"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
