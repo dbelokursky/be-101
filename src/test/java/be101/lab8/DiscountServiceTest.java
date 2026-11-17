@@ -1,31 +1,51 @@
 package be101.lab8;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import java.math.BigDecimal;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * TODO: написать юнит-тесты DiscountService до покрытия 80%+ строк.
- * Приёмник лабы — правило JaCoCo в pom.xml: mvn test упадёт, пока покрытия нет.
- *
- * Кейсы (урок «JUnit и Mockito»):
- *   TODO 1: amount <= 0 → IllegalArgumentException (и отдельно ноль)
- *   TODO 2: VIP, 1000 → 100 (10%)
- *   TODO 3: REGULAR, 5000 → 250 (граница «больше или равно»)
- *   TODO 4: REGULAR, 4999.99 → 0
- *   TODO 5: NEW, 200 → 6 (3%)
- *
- * Подсказки:
- *   assertThat(d).isEqualByComparingTo(new BigDecimal("100"));   // деньги — сравнением значений
- *   assertThatThrownBy(() -> svc.discountFor(tier, new BigDecimal("-1")))
- *       .isInstanceOf(IllegalArgumentException.class);
- *
- * Моки здесь не нужны: у сервиса нет соседей — это тоже осознанное решение (урок 2).
+ * Юнит-тесты правил скидки: каждый кейс — своя ветка сервиса.
+ * Деньги сравниваются isEqualByComparingTo (урок «JUnit и Mockito»).
  */
 class DiscountServiceTest {
 
-    // TODO: ваши тесты
+    private final DiscountService service = new DiscountService();
 
     @Test
-    void placeholder_removeMe() {
-        // Удалите этот тест-заглушку и напишите настоящие кейсы выше
+    void discountFor_vip_returnsTenPercent() {
+        BigDecimal discount = service.discountFor(CustomerTier.VIP, new BigDecimal("1000"));
+        assertThat(discount).isEqualByComparingTo(new BigDecimal("100"));
+    }
+
+    @Test
+    void discountFor_regularAtThreshold_returnsFivePercent() {
+        BigDecimal discount = service.discountFor(CustomerTier.REGULAR, new BigDecimal("5000"));
+        assertThat(discount).isEqualByComparingTo(new BigDecimal("250"));
+    }
+
+    @Test
+    void discountFor_regularBelowThreshold_returnsZero() {
+        BigDecimal discount = service.discountFor(CustomerTier.REGULAR, new BigDecimal("4999.99"));
+        assertThat(discount).isEqualByComparingTo(BigDecimal.ZERO);
+    }
+
+    @Test
+    void discountFor_newCustomer_returnsThreePercent() {
+        BigDecimal discount = service.discountFor(CustomerTier.NEW, new BigDecimal("200"));
+        assertThat(discount).isEqualByComparingTo(new BigDecimal("6"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"0", "-1", "-999.99"})
+    void discountFor_nonPositiveAmount_throws(String amount) {
+        assertThatThrownBy(() ->
+                service.discountFor(CustomerTier.VIP, new BigDecimal(amount)))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 }
