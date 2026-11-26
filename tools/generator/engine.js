@@ -164,7 +164,7 @@
     rememberRoute(route);
     var lessons = routeLessons();
     var active = currentLessonId();
-    if (lessons.some(function (lesson) { return lesson.id === active; })) {
+    if (active === 'course-trainer' || lessons.some(function (lesson) { return lesson.id === active; })) {
       render();
       return;
     }
@@ -177,7 +177,7 @@
     choices.setAttribute('role', 'group');
     choices.setAttribute('aria-label', 'Маршрут курса');
     [
-      ['basic', 'Базовый маршрут', 'Прочитай заказ, проверь доступ и согласуй контракт отмены.'],
+      ['basic', 'Базовый маршрут', 'Проверь API заказа, расследуй таймаут и оцени релиз на стенде.'],
       ['full', 'Полный курс и Spring', 'Пройди все модули и собери сервис на Java в лабораторных.'],
     ].forEach(function (entry) {
       var route = entry[0];
@@ -279,6 +279,13 @@
       });
       wrap.appendChild(list);
     });
+
+    if (isBasicRoute() && LESSONS.some(function (lesson) { return lesson.id === 'course-trainer'; })) {
+      var trainerLink = el('a', 'lesson-item route-trainer' +
+        (activeId === 'course-trainer' ? ' active' : ''), 'Тренажёр повторения');
+      trainerLink.href = '#/course-trainer';
+      wrap.appendChild(trainerLink);
+    }
 
     var footer = el('div', 'sidebar-footer',
       'Прогресс хранится только в твоём браузере');
@@ -605,33 +612,37 @@
     article.insertBefore(hero, article.firstChild);
   }
 
-  // тренажёр: N случайных вопросов из пройденных уроков
+  function collectQuestions(lessons) {
+    return lessons.flatMap(function (lesson) { return lesson.quizzes.flat(); });
+  }
+
+  // тренажёр выбирает вопросы внутри активного маршрута
   function mountTrainer(article) {
     var wrap = el('div', 'trainer');
     var btn = el('button', 'btn', 'Собрать сет из 10 вопросов');
     btn.type = 'button';
     wrap.appendChild(btn);
     var note = el('div', 'trainer-note',
-      'Вопросы берутся из уроков, которые вы уже начали проходить; если таких меньше — из всего курса.');
+      'Вопросы из сданных квизов идут в набор первыми. Остальные берём из выбранного маршрута.');
     wrap.appendChild(note);
     var holder = el('div', 'trainer-holder');
     wrap.appendChild(holder);
     article.appendChild(wrap);
 
     btn.addEventListener('click', function () {
-      var started = LESSONS.filter(function (l) {
+      var available = routeLessons();
+      var passed = available.filter(function (l) {
         var lp = getLessonProgress(l.id);
         for (var i = 0; i < l.quizzes.length; i++) {
           if (lp.quizPassed[i]) return true;
         }
         return false;
       });
-      var source = started.length ? started : LESSONS;
-      var pool = [];
-      source.forEach(function (l) {
-        l.quizzes.forEach(function (q) { pool = pool.concat(q); });
-      });
-      var picked = shuffle(pool).slice(0, 10);
+      var picked = shuffle(collectQuestions(passed)).slice(0, 10);
+      if (picked.length < 10) {
+        var remaining = available.filter(function (l) { return !passed.includes(l); });
+        picked = picked.concat(shuffle(collectQuestions(remaining)).slice(0, 10 - picked.length));
+      }
       holder.innerHTML = '';
       mountQuiz(holder, {
         id: 'trainer-session',
@@ -764,7 +775,9 @@
       app.appendChild(el('div', 'empty', 'Уроки не найдены — запусти сборку (tools/generator)'));
       return;
     }
-    if (isBasicRoute() && !BASIC_LESSONS.includes(lesson)) rememberRoute('full');
+    if (isBasicRoute() && lesson.id !== 'course-trainer' && !BASIC_LESSONS.includes(lesson)) {
+      rememberRoute('full');
+    }
 
     renderSidebar(app, lesson.id);
 
@@ -789,10 +802,10 @@
       if (lesson.cases[idx]) mountCase(slot, lesson, idx);
     });
 
-    // страница и с кейсом, и с квизом (экзамены) → вкладки «Кейс / Экзамен»
+    // экзамен с одним кейсом и одним квизом → вкладки «Кейс / Экзамен»
     var caseSlot = article.querySelector('.case-slot');
     var quizSlot = article.querySelector('.quiz-slot');
-    if (caseSlot && quizSlot) {
+    if (caseSlot && quizSlot && lesson.cases.length === 1 && lesson.quizzes.length === 1) {
       var tabs = el('div', 'exam-tabs');
       var tabRow = el('div', 'exam-tab-row');
       var paneCase = el('div', 'exam-pane');
