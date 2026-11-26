@@ -1,18 +1,17 @@
-# Автопроверка лаб: любой пуш в ветку lab-* прогоняет mvn test этой ветки.
-#
-# Как студенту провериться через CI:
-#   1. Форкните репозиторий
-#   2. Переключитесь на ветку лабы: git checkout lab-2
-#   3. Пишите код, коммитьте и пушьте в СВОЙ форк
-#   4. Вкладка Actions форка покажет «Lab check»: зелёный = лаба сдана
-#
-# Ручной запуск из интерфейса: Actions → Lab check → Run workflow → выбрать ветку.
+# GitHub загружает workflow из ветки события. Копия файла нужна в каждой
+# ветке с автопроверкой. Инструкция для студентов находится в README курса.
 name: Lab check
 
 on:
   push:
-    branches: ['lab-*']
-  workflow_dispatch:
+    branches:
+      - 'lab-[2-9]'
+      - 'lab-10'
+      - 'lab-[2-9]-solution'
+      - 'lab-10-solution'
+
+permissions:
+  contents: read
 
 jobs:
   test:

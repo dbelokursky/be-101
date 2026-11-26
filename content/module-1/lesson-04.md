@@ -6,7 +6,7 @@ moduleTitle: "Spring Boot: бэкенд с нуля"
 order: 4
 lab:
   title: Лаба 1. Контроллер
-  description: "Дописать REST-контроллер магазина по TODO-меткам: DTO, Lombok, MapStruct-маппер. Без автотестов — сделал и сравнил со студенческим эталоном в ветке решения."
+  description: "Дополни REST-контроллер магазина по TODO-меткам. Проверь ответы на запросы из инструкции и сравни контроллер, DTO и маппер с эталоном."
   branch: lab-1
   branchSolution: lab-1-solution
 ---
