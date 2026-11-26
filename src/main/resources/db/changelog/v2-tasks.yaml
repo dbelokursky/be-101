@@ -1,6 +1,35 @@
-# TODO 4: создайте таблицу tasks по образцу v1-projects.yaml.
-# Колонки (их ждут тесты): id (PK, autoincrement), project_id (BIGINT NOT NULL,
-# FK -> projects.id с именем fk_tasks_project), title (varchar(200) NOT NULL),
-# done (boolean NOT NULL).
-# Бонус: индекс idx_tasks_project по project_id.
-databaseChangeLog: []
+databaseChangeLog:
+  - changeSet:
+      id: create-tasks
+      author: be101
+      changes:
+        - createTable:
+            tableName: tasks
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints: { primaryKey: true, nullable: false }
+              - column:
+                  name: project_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    referencedTableName: projects
+                    referencedColumnNames: id
+                    foreignKeyName: fk_tasks_project
+              - column:
+                  name: title
+                  type: varchar(200)
+                  constraints: { nullable: false }
+              - column:
+                  name: done
+                  type: boolean
+                  constraints: { nullable: false }
+        - createIndex:
+            tableName: tasks
+            indexName: idx_tasks_project
+            columns:
+              - column:
+                  name: project_id
