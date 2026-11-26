@@ -6,7 +6,7 @@ moduleTitle: "Spring Boot: бэкенд с нуля"
 order: 2
 lab:
   title: Лаба 0. Запуск
-  description: Поставить JDK 21 и IDE, открыть готовый проект и запустить его — один зелёный тест и живой endpoint. Подробная инструкция — в README ветки lab-0.
+  description: Запусти mvn test и готовое приложение. Лаба пройдена, когда оба теста зелёные и /api/ping возвращает JSON со статусом ok.
   branch: lab-0
 ---
 

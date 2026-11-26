@@ -6,6 +6,7 @@
   var STORE_KEY = 'be101.progress.v1';
   var THEME_KEY = 'be101.theme';
   var PASS_RATIO = 0.8; // порог сдачи квиза: 80%+
+  var LAB_REPO = 'https://github.com/dbelokursky/be-101';
 
   // ---------- тема (светлая/тёмная) ----------
 
@@ -46,6 +47,9 @@
       var t = a[i]; a[i] = a[j]; a[j] = t;
     }
     return a;
+  }
+  function shuffledIndices(items) {
+    return shuffle(items.map(function (_, index) { return index; }));
   }
   function normalizeText(s) {
     return String(s).trim().toLowerCase().replace(/\s+/g, ' ');
@@ -237,7 +241,7 @@
       body.innerHTML = '';
       result.innerHTML = '';
       result.className = 'quiz-result';
-      order = shuffle(questions.map(function (_, i) { return i; }));
+      order = shuffledIndices(questions);
       var correctCount = 0;
       var answeredCount = 0;
       var okByIndex = {};
@@ -270,15 +274,16 @@
         }
 
         if (q.type === 'single') {
-          q.options.forEach(function (opt, oi) {
-            var b = el('button', 'option', esc(opt));
+          var optionOrder = shuffledIndices(q.options);
+          optionOrder.forEach(function (oi) {
+            var b = el('button', 'option', esc(q.options[oi]));
             b.type = 'button';
             b.addEventListener('click', function () {
               if (area.classList.contains('locked')) return;
               var ok = oi === q.correct;
               area.querySelectorAll('.option').forEach(function (o, idx) {
                 o.disabled = true;
-                if (idx === q.correct) o.classList.add('correct');
+                if (optionOrder[idx] === q.correct) o.classList.add('correct');
               });
               if (!ok) b.classList.add('wrong');
               finish(ok);
@@ -289,9 +294,9 @@
 
         if (q.type === 'multi') {
           var boxes = [];
-          q.options.forEach(function (opt, oi) {
+          shuffledIndices(q.options).forEach(function (oi) {
             var lab = el('label', 'option check',
-              '<input type="checkbox" data-i="' + oi + '"> <span>' + esc(opt) + '</span>');
+              '<input type="checkbox" data-i="' + oi + '"> <span>' + esc(q.options[oi]) + '</span>');
             area.appendChild(lab);
             boxes.push(lab);
           });
@@ -404,7 +409,7 @@
         (passed
           ? '<div class="quiz-note">Урок отмечен пройденным ✓</div>'
           : '<div class="quiz-note">Нужно ' + Math.round(PASS_RATIO * 100) +
-            '%+. Перечитай пояснения выше и попробуй ещё раз — вопросы перемешаются.</div>');
+            '%+. Перечитай пояснения выше и попробуй ещё раз — вопросы и варианты перемешаются.</div>');
 
       // «что перечитать»: темы проваленных вопросов (кроме собственных уроков)
       var wrongTopics = {};
@@ -635,13 +640,19 @@
     card.appendChild(el('div', 'lab-head', '<span class="lab-badge">Лабораторная</span> ' + esc(lab.title)));
     if (lab.description) card.appendChild(el('p', 'lab-desc', esc(lab.description)));
     if (lab.branch) {
-      card.appendChild(el('div', 'lab-branches',
-        'Ветка задания: <code>' + esc(lab.branch) + '</code>' +
-        (lab.branchSolution ? ' · решение: <code>' + esc(lab.branchSolution) + '</code>' : '') +
-        (lab.hasTests
-          ? ' · проверка: <code>' + esc(lab.testCommand || 'mvn test') + '</code>'
-          : (lab.branchSolution ? ' · сверяешься с решением' : ''))
-      ));
+      var links = 'JDK 21 и Maven · Инструкция в <a href="' +
+        LAB_REPO + '/blob/' + encodeURIComponent(lab.branch) + '/README.md"><code>' +
+        esc(lab.branch) + '</code></a>';
+      if (lab.branchSolution) {
+        links += ' · Эталон в <a href="' + LAB_REPO + '/tree/' +
+          encodeURIComponent(lab.branchSolution) + '"><code>' + esc(lab.branchSolution) + '</code></a>';
+      }
+      card.appendChild(el('div', 'lab-branches', links));
+      if (lab.hasTests) {
+        card.appendChild(el('p', 'lab-branches',
+          'В заготовке есть падающие проверки. Запусти <code>' +
+          esc(lab.testCommand || 'mvn test') + '</code> после выполнения.'));
+      }
     }
     var lp = getLessonProgress(lesson.id);
     var label = el('label', 'lab-check',
