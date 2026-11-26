@@ -1,7 +1,7 @@
 /**
  * BE-101 generator: content/*.md -> site/index.html
  *
- * Урок = markdown-файл с YAML-frontmatter (id, title, module, order, lab).
+ * Урок = markdown-файл с YAML-frontmatter (id, title, module, order, baseOrder, lab).
  * Внутри тела урока поддерживаются:
  *   - обычный markdown (с подсветкой кода через highlight.js на этапе сборки)
  *   - ```mermaid — диаграмма (рендерится в браузере mermaid.js)
@@ -140,6 +140,9 @@ function collectLessons() {
         throw new Error(`${file}: в frontmatter нет поля "${field}"`);
       }
     }
+    if (data.baseOrder !== undefined && (!Number.isInteger(data.baseOrder) || data.baseOrder < 1)) {
+      throw new Error(`${file}: baseOrder должен быть положительным целым числом`);
+    }
 
     const quizzes = [];
     const cases = [];
@@ -154,6 +157,13 @@ function collectLessons() {
         cases.push(normalizeCase(yaml.load(token.content), file));
         return `<div class="case-slot" data-case="${cases.length - 1}"></div>`;
       }
+      if (info === 'order-exercise') {
+        const mode = token.content.trim();
+        if (mode !== 'read' && mode !== 'access') {
+          throw new Error(`${file}: для order-exercise укажите read или access`);
+        }
+        return `<div class="order-exercise" data-order-exercise="${mode}"></div>`;
+      }
       if (info === 'mermaid') {
         return `<div class="mermaid">${esc(token.content.trim())}</div>`;
       }
@@ -161,16 +171,16 @@ function collectLessons() {
     };
 
     const html = md.render(content);
-    if (!quizzes.length) {
-      console.warn(`⚠️  ${file}: нет ни одного блока \`\`\`quiz — урок не будет засчитываться`);
+    if (!quizzes.length && !cases.length && !data.lab) {
+      console.warn(`⚠️  ${file}: на странице нет задания для прогресса`);
     }
-
     return {
       id: String(data.id),
       title: String(data.title),
       module: Number(data.module),
       moduleTitle: data.moduleTitle || null,
       order: Number(data.order),
+      baseOrder: data.baseOrder ?? null,
       lab: data.lab || null,
       html,
       quizzes,
@@ -181,9 +191,14 @@ function collectLessons() {
   lessons.sort((a, b) => a.module - b.module || a.order - b.order);
 
   const ids = new Set();
+  const baseOrders = new Set();
   for (const l of lessons) {
     if (ids.has(l.id)) throw new Error(`дублирующийся id урока: ${l.id}`);
     ids.add(l.id);
+    if (l.baseOrder !== null) {
+      if (baseOrders.has(l.baseOrder)) throw new Error(`дублирующийся baseOrder: ${l.baseOrder}`);
+      baseOrders.add(l.baseOrder);
+    }
   }
   return lessons;
 }
@@ -197,16 +212,21 @@ function build() {
   const template = fs.readFileSync(path.join(TOOLS_DIR, 'template.html'), 'utf8');
   const css = fs.readFileSync(path.join(TOOLS_DIR, 'styles.css'), 'utf8');
   const engine = fs.readFileSync(path.join(TOOLS_DIR, 'engine.js'), 'utf8');
+  const orderDemo = fs.readFileSync(path.join(TOOLS_DIR, 'order-demo.js'), 'utf8');
+  const orderExercise = fs.readFileSync(path.join(TOOLS_DIR, 'order-exercise.js'), 'utf8');
+  const orderWorker = fs.readFileSync(path.join(TOOLS_DIR, 'order-worker.js'), 'utf8');
 
   const data = `window.BE101 = ${escapeForScript(JSON.stringify({ lessons }))};`;
 
   const html = template
     .replace('/*__CSS__*/', () => css)
     .replace('/*__DATA__*/', () => data)
+    .replace('/*__ORDER_EXERCISE__*/', () => orderDemo + '\n' + orderExercise)
     .replace('/*__ENGINE__*/', () => engine);
 
   fs.mkdirSync(SITE_DIR, { recursive: true });
   fs.writeFileSync(path.join(SITE_DIR, 'index.html'), html);
+  fs.writeFileSync(path.join(SITE_DIR, 'order-worker.js'), orderDemo + '\n' + orderWorker);
 
   // mermaid кладём рядом — работает и с file://
   const mermaidSrc = path.join(

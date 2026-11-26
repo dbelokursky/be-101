@@ -4,7 +4,8 @@
   "private": true,
   "description": "Генератор статического сайта курса BE-101 из markdown",
   "scripts": {
-    "build": "node generate.js"
+    "build": "node generate.js",
+    "test": "node --test"
   },
   "devDependencies": {
     "gray-matter": "^4.0.3",

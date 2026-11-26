@@ -4,6 +4,7 @@ title: "OpenAPI: читаем и пишем"
 module: 2
 moduleTitle: "Проектирование API"
 order: 2
+baseOrder: 4
 lab:
   title: "Лаба 3. OpenAPI-контракт"
   description: "Дописать openapi.yaml бронирования переговорок по требованиям. Проверка — автотесты контракта: mvn test зелёный = договор описан верно."
