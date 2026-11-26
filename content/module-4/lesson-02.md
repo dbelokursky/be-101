@@ -58,11 +58,14 @@ topic: orders.created
 **Offset** — номер события в партиции (0, 1, 2…). Позиция консюмера — это offset, и он принадлежит **группе** (groupId), а не отдельному процессу:
 
 ```text
-partition 0:  e₁  e₂  e₃  [e₄]  e₅  e₆
-                             ↑
+offset:        0   1   2   3   4   5
+partition 0:  e₁  e₂  e₃  e₄  e₅  e₆
+                               ↑
         группа mail-service зафиксировала offset = 4
-        (e₄ обработана, но коммит ещё не прошёл?)
+        следующее чтение начнётся с e₅
 ```
+
+Зафиксированный offset указывает позицию следующего чтения. Так, после успешной обработки записи с offset `3` группа может сохранить `4`. [Документация KafkaConsumer](https://kafka.apache.org/43/javadoc/org/apache/kafka/clients/consumer/KafkaConsumer.html)
 
 Кто что читает — хранит сам Kafka (offsets topic). Поэтому:
 
