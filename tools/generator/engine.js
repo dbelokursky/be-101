@@ -659,69 +659,108 @@
     });
   }
 
-  // ---------- кейс (textarea + эталонный разбор) ----------
+  // ---------- кейс (решение + эталонный разбор) ----------
 
   function mountCase(slotEl, lesson, caseIndex) {
     var c = lesson.cases[caseIndex];
     var lp = getLessonProgress(lesson.id);
     var done = !!lp.caseDone[caseIndex];
+    var answerDraft = be101CaseWork.load(lesson.id, caseIndex, 'answer');
+    var reviewDraft = be101CaseWork.load(lesson.id, caseIndex, 'review');
+    var answerSaved = answerDraft.saved;
+    var reviewSaved = reviewDraft.saved;
 
     var root = el('div', 'case');
-    root.appendChild(el('div', 'case-head',
+    var head = el('div', 'case-head',
       '<span class="case-badge">Кейс</span>' +
-      '<span class="case-title">' + esc(c.title) + '</span>' +
-      (done ? '<span class="case-done-badge">✓ разобран</span>' : '')));
+      '<span class="case-title">' + esc(c.title) + '</span>');
+    var badge = el('span', 'case-done-badge', '✓ разобран');
+    head.appendChild(badge);
+    root.appendChild(head);
     root.appendChild(el('div', 'case-task', esc(c.task)));
 
-    var area = document.createElement('textarea');
-    area.className = 'case-input';
-    area.placeholder = c.placeholder || 'Свой ответ…';
-    area.spellcheck = false;
-    root.appendChild(area);
+    var answer = el('textarea', 'case-input');
+    answer.setAttribute('aria-label', 'Решение кейса «' + c.title + '»');
+    answer.placeholder = c.placeholder || 'Свой ответ…';
+    answer.spellcheck = false;
+    answer.value = answerDraft.text;
+    root.appendChild(answer);
 
-    var btn = el('button', 'btn small', 'Показать эталонный разбор');
-    btn.type = 'button';
-    btn.disabled = true;
-    area.addEventListener('input', function () {
-      btn.disabled = !area.value.trim();
-    });
-    root.appendChild(btn);
+    var actions = el('div', 'case-actions');
+    var toggle = el('button', 'btn small');
+    toggle.type = 'button';
+    var download = el('button', 'btn small case-download', 'Скачать решение (.md)');
+    download.type = 'button';
+    actions.append(toggle, download);
+    root.appendChild(actions);
 
-    var ref = el('div', 'case-reference' + (done ? ' show' : ''), c.referenceHtml);
-    root.appendChild(ref);
-
-    var note = el('div', 'case-note',
-      'Эталон — для самопроверки: сначала своё решение, потом сверка. Ответ никуда не отправляется.');
+    var note = el('p', 'case-note');
+    note.setAttribute('role', 'status');
     root.appendChild(note);
 
-    btn.addEventListener('click', function () {
-      if (!area.value.trim()) return;
-      setCaseDone(lesson.id, caseIndex, true);
-      ref.classList.add('show');
-      root.querySelector('.case-head').appendChild(
-        el('span', 'case-done-badge', '✓ разобран'));
-      btn.disabled = true;
-      again.style.display = '';
+    var ref = el('div', 'case-reference', c.referenceHtml);
+    ref.id = 'case-reference-' + lesson.id + '-' + caseIndex;
+    toggle.setAttribute('aria-controls', ref.id);
+    var reviewLabel = el('label', 'case-review', 'Самооценка по разбору');
+    var review = el('textarea', 'case-input');
+    review.placeholder = 'Какие критерии выполнены? Что стоит доработать?';
+    review.value = reviewDraft.text;
+    reviewLabel.appendChild(review);
+    ref.appendChild(reviewLabel);
+    root.appendChild(ref);
+
+    function updateStorageNote() {
+      var message = answerSaved && reviewSaved
+        ? 'Черновик и самооценка сохраняются в этом браузере.'
+        : 'Сохранение в браузере недоступно. Скачай решение перед закрытием страницы.';
+      if (note.textContent !== message) note.textContent = message;
+    }
+
+    function updateButtons() {
+      var hasAnswer = !!answer.value.trim();
+      toggle.disabled = !done && !hasAnswer;
+      download.disabled = !hasAnswer;
+    }
+
+    function updateReview() {
+      badge.hidden = !done;
+      ref.classList.toggle('show', done);
+      toggle.textContent = done ? 'Скрыть эталон' : 'Показать эталонный разбор';
+      toggle.setAttribute('aria-expanded', String(done));
+      updateButtons();
+    }
+
+    answer.addEventListener('input', function () {
+      answerSaved = be101CaseWork.save(lesson.id, caseIndex, 'answer', answer.value);
+      updateButtons();
+      updateStorageNote();
+    });
+    review.addEventListener('input', function () {
+      reviewSaved = be101CaseWork.save(lesson.id, caseIndex, 'review', review.value);
+      updateStorageNote();
+    });
+
+    toggle.addEventListener('click', function () {
+      done = !done;
+      setCaseDone(lesson.id, caseIndex, done);
+      updateReview();
       updateSidebar();
     });
 
-    // переигрывание: спрятать эталон и попробовать снова
-    var again = el('button', 'btn small case-again', '↺ Скрыть эталон и попробовать снова');
-    again.type = 'button';
-    again.style.display = done ? '' : 'none';
-    again.addEventListener('click', function () {
-      setCaseDone(lesson.id, caseIndex, false);
-      ref.classList.remove('show');
-      area.value = '';
-      area.disabled = false;
-      btn.disabled = true;
-      again.style.display = 'none';
-      var badge = root.querySelector('.case-done-badge');
-      if (badge) badge.remove();
-      updateSidebar();
+    download.addEventListener('click', function () {
+      var markdown = be101CaseWork.markdown(lesson, caseIndex, answer.value, review.value);
+      var url = URL.createObjectURL(new Blob([markdown], { type: 'text/markdown;charset=utf-8' }));
+      var link = el('a');
+      link.href = url;
+      link.download = 'be101-' + lesson.id + '-case-' + (caseIndex + 1) + '.md';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
     });
-    root.appendChild(again);
 
+    updateStorageNote();
+    updateReview();
     slotEl.innerHTML = '';
     slotEl.appendChild(root);
   }

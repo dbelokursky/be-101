@@ -212,6 +212,7 @@ function build() {
   const template = fs.readFileSync(path.join(TOOLS_DIR, 'template.html'), 'utf8');
   const css = fs.readFileSync(path.join(TOOLS_DIR, 'styles.css'), 'utf8');
   const engine = fs.readFileSync(path.join(TOOLS_DIR, 'engine.js'), 'utf8');
+  const caseWork = fs.readFileSync(path.join(TOOLS_DIR, 'case-work.js'), 'utf8');
   const orderDemo = fs.readFileSync(path.join(TOOLS_DIR, 'order-demo.js'), 'utf8');
   const orderExercise = fs.readFileSync(path.join(TOOLS_DIR, 'order-exercise.js'), 'utf8');
   const orderWorker = fs.readFileSync(path.join(TOOLS_DIR, 'order-worker.js'), 'utf8');
@@ -222,7 +223,7 @@ function build() {
     .replace('/*__CSS__*/', () => css)
     .replace('/*__DATA__*/', () => data)
     .replace('/*__ORDER_EXERCISE__*/', () => orderDemo + '\n' + orderExercise)
-    .replace('/*__ENGINE__*/', () => engine);
+    .replace('/*__ENGINE__*/', () => caseWork + '\n' + engine);
 
   fs.mkdirSync(SITE_DIR, { recursive: true });
   fs.writeFileSync(path.join(SITE_DIR, 'index.html'), html);
