@@ -864,6 +864,7 @@
       var idx = Number(slot.dataset.case);
       if (lesson.cases[idx]) mountCase(slot, lesson, idx);
     });
+    article.querySelectorAll('.order-compatibility').forEach(be101OrderCompatibility.mount);
 
     // экзамен с одним кейсом и одним квизом → вкладки «Кейс / Экзамен»
     var caseSlot = article.querySelector('.case-slot');
