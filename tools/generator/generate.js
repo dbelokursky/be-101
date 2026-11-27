@@ -159,8 +159,8 @@ function collectLessons() {
       }
       if (info === 'order-exercise') {
         const mode = token.content.trim();
-        if (mode !== 'read' && mode !== 'access') {
-          throw new Error(`${file}: для order-exercise укажите read или access`);
+        if (!['read', 'access', 'cancel'].includes(mode)) {
+          throw new Error(`${file}: для order-exercise укажите read, access или cancel`);
         }
         return `<div class="order-exercise" data-order-exercise="${mode}"></div>`;
       }
@@ -219,6 +219,7 @@ function build() {
   const orderCompatibility = fs.readFileSync(path.join(TOOLS_DIR, 'order-compatibility.js'), 'utf8');
   const orderDemo = fs.readFileSync(path.join(TOOLS_DIR, 'order-demo.js'), 'utf8');
   const orderExercise = fs.readFileSync(path.join(TOOLS_DIR, 'order-exercise.js'), 'utf8');
+  const orderStore = fs.readFileSync(path.join(TOOLS_DIR, 'order-store.js'), 'utf8');
   const orderWorker = fs.readFileSync(path.join(TOOLS_DIR, 'order-worker.js'), 'utf8');
 
   const data = `window.BE101 = ${escapeForScript(JSON.stringify({ lessons }))};`;
@@ -231,7 +232,7 @@ function build() {
 
   fs.mkdirSync(SITE_DIR, { recursive: true });
   fs.writeFileSync(path.join(SITE_DIR, 'index.html'), html);
-  fs.writeFileSync(path.join(SITE_DIR, 'order-worker.js'), orderDemo + '\n' + orderWorker);
+  fs.writeFileSync(path.join(SITE_DIR, 'order-worker.js'), [orderDemo, orderStore, orderWorker].join('\n'));
 
   // mermaid кладём рядом — работает и с file://
   const mermaidSrc = path.join(
