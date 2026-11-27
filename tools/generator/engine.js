@@ -5,6 +5,9 @@
   var LESSONS = (window.BE101 && window.BE101.lessons) || [];
   var BASIC_LESSONS = LESSONS.filter(function (lesson) { return lesson.baseOrder > 0; })
     .sort(function (left, right) { return left.baseOrder - right.baseOrder; });
+  var BASIC_FINAL_ID = 'course-basic-final';
+  var FULL_LESSONS = LESSONS.filter(function (lesson) { return lesson.id !== BASIC_FINAL_ID; });
+  var SHARED_ROUTE_IDS = ['course-finish', 'course-trainer'];
   var STORE_KEY = 'be101.progress.v1';
   var ROUTE_KEY = 'be101.route';
   var THEME_KEY = 'be101.theme';
@@ -146,7 +149,7 @@
   }
 
   function isBasicRoute() { return currentRoute === 'basic' && BASIC_LESSONS.length > 0; }
-  function routeLessons() { return isBasicRoute() ? BASIC_LESSONS : LESSONS; }
+  function routeLessons() { return isBasicRoute() ? BASIC_LESSONS : FULL_LESSONS; }
 
   function nextIncompleteLesson() {
     var includeLabs = !isBasicRoute();
@@ -164,7 +167,7 @@
     rememberRoute(route);
     var lessons = routeLessons();
     var active = currentLessonId();
-    if (active === 'course-trainer' || lessons.some(function (lesson) { return lesson.id === active; })) {
+    if (SHARED_ROUTE_IDS.includes(active) || lessons.some(function (lesson) { return lesson.id === active; })) {
       render();
       return;
     }
@@ -177,7 +180,7 @@
     choices.setAttribute('role', 'group');
     choices.setAttribute('aria-label', 'Маршрут курса');
     [
-      ['basic', 'Базовый маршрут', 'Проверь API заказа, расследуй таймаут и оцени релиз на стенде.'],
+      ['basic', 'Базовый маршрут', 'Проверь API заказа, расследуй таймаут и реши итоговый кейс о бронировании.'],
       ['full', 'Полный курс и Spring', 'Пройди все модули и собери сервис на Java в лабораторных.'],
     ].forEach(function (entry) {
       var route = entry[0];
@@ -239,7 +242,7 @@
       var group = includeLabs ? l.module : 'basic';
       if (!byNum[group]) {
         byNum[group] = {
-          title: includeLabs ? (l.moduleTitle || 'Модуль ' + l.module) : 'Сценарий с заказом',
+          title: includeLabs ? (l.moduleTitle || 'Модуль ' + l.module) : 'Уроки и практика',
           lessons: [],
         };
         modules.push(byNum[group]);
@@ -280,11 +283,17 @@
       wrap.appendChild(list);
     });
 
-    if (isBasicRoute() && LESSONS.some(function (lesson) { return lesson.id === 'course-trainer'; })) {
-      var trainerLink = el('a', 'lesson-item route-trainer' +
-        (activeId === 'course-trainer' ? ' active' : ''), 'Тренажёр повторения');
-      trainerLink.href = '#/course-trainer';
-      wrap.appendChild(trainerLink);
+    if (isBasicRoute()) {
+      var tools = el('nav', 'lesson-list route-tools');
+      tools.setAttribute('aria-label', 'Итоги и повторение');
+      SHARED_ROUTE_IDS.forEach(function (id) {
+        var lesson = LESSONS.find(function (item) { return item.id === id; });
+        if (!lesson) return;
+        var link = el('a', 'lesson-item' + (activeId === id ? ' active' : ''), esc(lesson.title));
+        link.href = '#/' + id;
+        tools.appendChild(link);
+      });
+      wrap.appendChild(tools);
     }
 
     var footer = el('div', 'sidebar-footer',
@@ -569,35 +578,37 @@
   }
 
   // финальный экран: сводный прогресс по всем модулям (динамическая шапка)
-  function mountFinishHero(article) {
+  function mountFinishHero(article, lesson) {
     var hero = el('div', 'finish-hero');
 
+    var includeLabs = !isBasicRoute();
     var total = 0, done = 0;
     var modules = [];
     var byNum = {};
-    LESSONS.forEach(function (l) {
+    routeLessons().forEach(function (l) {
       if (!byNum[l.module]) {
-        byNum[l.module] = { title: l.moduleTitle || ('Модуль ' + l.module), lessons: [] };
+        byNum[l.module] = { title: l.moduleTitle || ('Модуль ' + l.module), total: 0, done: 0 };
         modules.push(byNum[l.module]);
       }
-      byNum[l.module].lessons.push(l);
-      total += lessonUnits(l);
-      done += lessonDoneUnits(l);
+      var units = lessonUnits(l, includeLabs);
+      var checked = lessonDoneUnits(l, includeLabs);
+      byNum[l.module].total += units;
+      byNum[l.module].done += checked;
+      total += units;
+      done += checked;
     });
     var pct = total ? Math.round((done / total) * 100) : 0;
+    var complete = total > 0 && done === total;
 
-    hero.appendChild(el('div', 'finish-emoji', pct >= 100 ? '🏆' : '🎓'));
+    hero.appendChild(el('div', 'finish-emoji', complete ? '🏆' : '🎓'));
     hero.appendChild(el('div', 'finish-heading',
-      pct >= 100 ? 'Курс пройден полностью!' : 'Твой прогресс по курсу'));
+      includeLabs ? 'Итоги полного курса' : 'Итоги базового маршрута'));
     hero.appendChild(el('div', 'finish-subline',
-      'Пройдено <b>' + done + '</b> из <b>' + total + '</b> юнитов (' + pct + '%)' +
-      (pct >= 100 ? '' : ' — возвращайся к незакрытым квизам, лабам и кейсам')));
+      'Отмечено <b>' + done + '</b> из <b>' + total + '</b> заданий (' + pct + '%)'));
 
     var rows = el('div', 'finish-rows');
     modules.forEach(function (m) {
-      var t = 0, d = 0;
-      m.lessons.forEach(function (l) { t += lessonUnits(l); d += lessonDoneUnits(l); });
-      var p = t ? Math.round((d / t) * 100) : 0;
+      var p = m.total ? Math.round((m.done / m.total) * 100) : 0;
       var row = el('div', 'finish-row');
       row.appendChild(el('div', 'finish-row-title', esc(m.title)));
       var bar = el('div', 'module-progress-bar');
@@ -609,7 +620,13 @@
       rows.appendChild(row);
     });
     hero.appendChild(rows);
-    article.insertBefore(hero, article.firstChild);
+    var task = el('a', 'finish-task', includeLabs ? 'Открыть выпускную лабу Spring' : 'Открыть итоговый кейс');
+    task.href = includeLabs ? labReadmeUrl(lesson.lab.branch) : '#/' + BASIC_FINAL_ID;
+    hero.appendChild(task);
+
+    var previous = article.querySelector('.finish-hero');
+    if (previous) previous.replaceWith(hero);
+    else article.insertBefore(hero, article.firstChild);
   }
 
   function collectQuestions(lessons) {
@@ -767,6 +784,10 @@
 
   // ---------- карточка лабы ----------
 
+  function labReadmeUrl(branch) {
+    return LAB_REPO + '/blob/' + encodeURIComponent(branch) + '/README.md';
+  }
+
   function mountLab(article, lesson) {
     var lab = lesson.lab;
     if (!lab) return;
@@ -776,7 +797,7 @@
     if (lab.description) card.appendChild(el('p', 'lab-desc', esc(lab.description)));
     if (lab.branch) {
       var links = 'JDK 21 и Maven · Инструкция в <a href="' +
-        LAB_REPO + '/blob/' + encodeURIComponent(lab.branch) + '/README.md"><code>' +
+        labReadmeUrl(lab.branch) + '"><code>' +
         esc(lab.branch) + '</code></a>';
       if (lab.branchSolution) {
         links += ' · Эталон в <a href="' + LAB_REPO + '/tree/' +
@@ -795,6 +816,7 @@
     label.querySelector('input').addEventListener('change', function (e) {
       setLabDone(lesson.id, e.target.checked);
       updateSidebar(); // только галочки/прогресс, без сброса квиза
+      if (lesson.id === 'course-finish') mountFinishHero(article, lesson);
     });
     card.appendChild(label);
     article.appendChild(card);
@@ -814,7 +836,9 @@
       app.appendChild(el('div', 'empty', 'Уроки не найдены — запусти сборку (tools/generator)'));
       return;
     }
-    if (isBasicRoute() && lesson.id !== 'course-trainer' && !BASIC_LESSONS.includes(lesson)) {
+    if (lesson.id === BASIC_FINAL_ID && !isBasicRoute()) {
+      rememberRoute('basic');
+    } else if (isBasicRoute() && !SHARED_ROUTE_IDS.includes(lesson.id) && !BASIC_LESSONS.includes(lesson)) {
       rememberRoute('full');
     }
 
@@ -829,7 +853,7 @@
     article.querySelectorAll('.order-exercise').forEach(be101OrderExercise.mount);
 
     // лаба — в конец урока
-    mountLab(article, lesson);
+    if (lesson.id !== 'course-finish' || !isBasicRoute()) mountLab(article, lesson);
 
     // монтируем квизы и кейсы в слоты из markdown
     article.querySelectorAll('.quiz-slot').forEach(function (slot) {
@@ -899,7 +923,7 @@
     }
 
     // спец-страницы и навигация
-    if (lesson.id === 'course-finish') mountFinishHero(article);
+    if (lesson.id === 'course-finish') mountFinishHero(article, lesson);
     if (lesson.id === 'course-trainer') mountTrainer(article);
     appendLessonNav(article, lesson);
 
