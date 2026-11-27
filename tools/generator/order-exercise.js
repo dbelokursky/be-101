@@ -1,11 +1,15 @@
 const be101OrderExercise = (() => {
+  const demo = be101OrderDemo;
+  let localState = demo.initialState();
+  let workerReady;
+
   function controlOrderRequests() {
     if (!window.isSecureContext || location.protocol === 'file:' || !navigator.serviceWorker) {
       return Promise.resolve(false);
     }
 
     const workers = navigator.serviceWorker;
-    const script = new URL('order-worker.js', document.baseURI).href;
+    const script = new URL('order-worker.js?v=2', document.baseURI).href;
     const controlsPage = () => workers.controller?.scriptURL === script;
     if (controlsPage()) return Promise.resolve(true);
 
@@ -24,45 +28,36 @@ const be101OrderExercise = (() => {
     });
   }
 
-  async function exchange(id, authorization) {
-    const url = new URL('api/orders/' + id, document.baseURI);
-    const request = [
-      'GET ' + url.pathname,
-      ...(authorization ? ['Authorization: ' + authorization] : []),
-    ].join('\n');
-
-    try {
-      if (await controlOrderRequests()) {
-        const response = await fetch(url, {
-          headers: authorization ? { Authorization: authorization } : {},
-          cache: 'no-store',
-        });
-        if (response.headers.get('X-BE101-Practice') === 'orders') {
-          const headers = {};
-          for (const name of ['Content-Type', 'Cache-Control', 'WWW-Authenticate']) {
-            if (response.headers.has(name)) headers[name] = response.headers.get(name);
-          }
-          return {
-            request,
-            status: response.status,
-            statusText: response.statusText,
-            headers,
-            body: await response.text(),
-            source: 'Учебный запрос доступен в DevTools → Network.',
-          };
-        }
-      }
-    } catch (_) {
-      // Сохранённый пример доступен без сетевого обмена.
+  async function exchange(method, path, headers) {
+    const requestHeaders = new Headers(headers);
+    workerReady ??= Promise.resolve().then(controlOrderRequests).catch(() => false);
+    if (!await workerReady) {
+      const effect = demo.execute(localState, demo.route(method, path), requestHeaders);
+      localState = effect.state;
+      return {
+        ...effect.response,
+        path: '/' + path,
+        body: effect.response.body === null ? '' : JSON.stringify(effect.response.body, null, 2),
+        source: 'Локальная учебная модель в этой вкладке.',
+      };
     }
 
-    const sample = be101OrderDemo.readOrder(id, authorization);
+    const url = new URL(path, document.baseURI);
+    const response = await fetch(url, { method, headers: requestHeaders, cache: 'no-store' });
+    if (response.headers.get('X-BE101-Practice') !== 'orders') {
+      throw new Error('Unexpected response from the training API');
+    }
+    const responseHeaders = {};
+    for (const name of ['Content-Type', 'Cache-Control', 'WWW-Authenticate']) {
+      if (response.headers.has(name)) responseHeaders[name] = response.headers.get(name);
+    }
     return {
-      ...sample,
-      request: 'GET /api/orders/' + id +
-        (authorization ? '\nAuthorization: ' + authorization : ''),
-      body: JSON.stringify(sample.body, null, 2),
-      source: 'Сохранённый пример обмена.',
+      path: url.pathname,
+      status: response.status,
+      statusText: response.statusText,
+      headers: responseHeaders,
+      body: await response.text(),
+      source: 'Учебный запрос доступен в DevTools → Network.',
     };
   }
 
@@ -73,65 +68,147 @@ const be101OrderExercise = (() => {
     return node;
   }
 
-  function mount(slot) {
-    const showIdentity = slot.dataset.orderExercise === 'access';
-    const form = element('form', 'order-request');
-    const label = element('label', 'order-field', 'Номер заказа');
-    const number = element('input', '');
-    number.inputMode = 'numeric';
-    number.pattern = '[0-9]{1,12}';
-    number.required = true;
-    number.maxLength = 12;
-    number.value = String(be101OrderDemo.order.id);
-    label.appendChild(number);
-    form.appendChild(label);
+  function field(name, input) {
+    const label = element('label', 'order-field', name);
+    label.appendChild(input);
+    return label;
+  }
 
-    const identity = element('select', '');
-    if (showIdentity) {
-      const identityLabel = element('label', 'order-field', 'Учебный пользователь');
-      const entries = [
-        ['Анна, владелец', be101OrderDemo.owner],
-        ['Борис, другой покупатель', be101OrderDemo.buyer],
-        ['Без токена', ''],
-      ];
-      for (const [name, token] of entries) {
-        const option = element('option', '', name);
-        option.value = token;
-        identity.appendChild(option);
-      }
-      identityLabel.appendChild(identity);
-      form.appendChild(identityLabel);
+  function select(entries) {
+    const input = element('select', '');
+    for (const [name, value] of entries) {
+      const option = element('option', '', name);
+      option.value = value;
+      input.appendChild(option);
     }
+    return input;
+  }
 
-    const send = element('button', 'btn', 'Отправить GET');
-    send.type = 'submit';
-    form.appendChild(send);
+  function identitySelect() {
+    return select([
+      ['Анна, владелец', demo.owner],
+      ['Борис, другой покупатель', demo.buyer],
+      ['Без токена', ''],
+    ]);
+  }
+
+  function credentials(token) {
+    return token ? { Authorization: 'Bearer ' + token } : {};
+  }
+
+  function button(label, submit = false) {
+    const control = element('button', 'btn', label);
+    control.type = submit ? 'submit' : 'button';
+    return control;
+  }
+
+  function mountRequest(slot, controls) {
+    const form = element('form', '');
+    form.appendChild(controls);
     const notice = element('p', 'order-notice');
     notice.setAttribute('role', 'status');
     const transcript = element('pre', 'order-transcript');
     transcript.hidden = true;
     slot.append(form, notice, transcript);
 
-    form.addEventListener('submit', async event => {
-      event.preventDefault();
-      const id = number.value;
-      if (!be101OrderDemo.orderIdPattern.test(id)) return;
-      const token = showIdentity ? identity.value : be101OrderDemo.owner;
-      send.disabled = true;
+    async function send(method, path, headers) {
+      if (controls.disabled) return;
+      controls.disabled = true;
+      transcript.hidden = true;
       notice.textContent = 'Отправляю запрос…';
-      const result = await exchange(id, token ? 'Bearer ' + token : '');
-      transcript.textContent = [
-        result.request,
-        '',
-        result.status + ' ' + result.statusText,
-        ...Object.entries(result.headers).map(([name, value]) => name + ': ' + value),
-        '',
-        result.body,
-      ].join('\n');
-      transcript.hidden = false;
-      notice.textContent = result.status + ' ' + result.statusText + '. ' + result.source;
-      send.disabled = false;
+
+      try {
+        const result = await exchange(method, path, headers);
+        transcript.textContent = [
+          method + ' ' + result.path,
+          ...Object.entries(headers).map(([name, value]) => name + ': ' + value),
+          '',
+          result.status + ' ' + result.statusText,
+          ...Object.entries(result.headers).map(([name, value]) => name + ': ' + value),
+          ...(result.body ? ['', result.body] : []),
+        ].join('\n');
+        transcript.hidden = false;
+        notice.textContent = result.status + ' ' + result.statusText + '. ' + result.source;
+        return result;
+      } catch (_) {
+        notice.textContent = 'Не удалось получить учебный ответ. Проверь поля запроса. При повторе отмены используй исходный ключ.';
+      } finally {
+        controls.disabled = false;
+      }
+    }
+
+    return { form, send };
+  }
+
+  function mountRead(slot) {
+    const showIdentity = slot.dataset.orderExercise === 'access';
+    const controls = element('fieldset', 'order-request');
+    const number = element('input', '');
+    number.inputMode = 'numeric';
+    number.pattern = '[0-9]{1,12}';
+    number.required = true;
+    number.maxLength = 12;
+    number.value = String(demo.order.id);
+    controls.appendChild(field('Номер заказа', number));
+
+    const identity = identitySelect();
+    if (showIdentity) controls.appendChild(field('Учебный пользователь', identity));
+    controls.appendChild(button('Отправить GET', true));
+
+    const { form, send } = mountRequest(slot, controls);
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      if (!demo.orderIdPattern.test(number.value)) return;
+      const token = showIdentity ? identity.value : demo.owner;
+      send('GET', 'api/orders/' + number.value, credentials(token));
     });
+  }
+
+  function mountCancel(slot) {
+    const orderPath = 'api/orders/' + demo.order.id;
+    const defaultKey = 'cancel-42-1';
+    const controls = element('fieldset', 'order-request');
+    const identity = identitySelect();
+    const time = select(demo.times.map(value => [value.slice(11), value]));
+    const key = element('input', 'order-key');
+    key.value = defaultKey;
+    key.spellcheck = false;
+    controls.append(
+      field('Учебный пользователь', identity),
+      field('Время 16 января (UTC)', time),
+      field('Idempotency-Key', key),
+      button('Отправить POST /cancel', true),
+    );
+
+    const actions = element('div', 'order-actions');
+    const getOrder = button('Прочитать заказ');
+    const getRefunds = button('Проверить возвраты');
+    const reset = button('Сбросить заказ');
+    actions.append(getOrder, getRefunds, reset);
+    controls.appendChild(actions);
+
+    const { form, send } = mountRequest(slot, controls);
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      const headers = { ...credentials(identity.value), 'X-BE101-Time': time.value };
+      if (key.value.trim()) headers['Idempotency-Key'] = key.value.trim();
+      send('POST', orderPath + '/cancel', headers);
+    });
+    getOrder.addEventListener('click', () => send('GET', orderPath, credentials(identity.value)));
+    getRefunds.addEventListener('click', () => send('GET', orderPath + '/refunds', credentials(identity.value)));
+    reset.addEventListener('click', async () => {
+      const result = await send('POST', demo.resetPath, {});
+      if (result?.status === 204) {
+        identity.value = demo.owner;
+        time.value = demo.times[0];
+        key.value = defaultKey;
+      }
+    });
+  }
+
+  function mount(slot) {
+    if (slot.dataset.orderExercise === 'cancel') mountCancel(slot);
+    else mountRead(slot);
   }
 
   return { mount };
