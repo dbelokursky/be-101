@@ -203,6 +203,25 @@ function collectLessons() {
       baseOrders.add(l.baseOrder);
     }
   }
+
+  const brokenLinks = [];
+  for (const lesson of lessons) {
+    const sections = [lesson.html, ...lesson.cases.map(item => item.referenceHtml)];
+    for (const section of sections) {
+      for (const [, anchor] of section.matchAll(/<a\b[^>]*\shref="(#\/?[^"]*)"/g)) {
+        const target = anchor.replace(/^#\/?/, '');
+        if (target && !ids.has(target)) brokenLinks.push(`${lesson.id} → ${anchor}`);
+      }
+    }
+    for (const question of lesson.quizzes.flat()) {
+      if (question.topic && !ids.has(question.topic)) {
+        brokenLinks.push(`${lesson.id} → topic ${question.topic}`);
+      }
+    }
+  }
+  if (brokenLinks.length) {
+    throw new Error('Не найдены уроки для ссылок:\n' + brokenLinks.join('\n'));
+  }
   return lessons;
 }
 
