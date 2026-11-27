@@ -1,0 +1,49 @@
+name: Course check
+
+on:
+  pull_request:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: course-check-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: tools/generator
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: tools/generator/package-lock.json
+
+      - run: npm ci
+      - run: npm test
+
+      - name: Проверить ссылки и пересобрать сайт
+        run: npm run build
+
+      - name: Сверить пересборку с файлами в PR
+        working-directory: .
+        run: |
+          changed=$(git status --porcelain --untracked-files=all -- site)
+          if [ -n "$changed" ]; then
+            echo "::error::Пересобери сайт через npm run build в tools/generator и добавь файлы site/ в PR."
+            printf '%s\n' "$changed"
+            exit 1
+          fi
+
+      - run: npx playwright install --with-deps --only-shell chromium
+      - run: npm run test:browser
