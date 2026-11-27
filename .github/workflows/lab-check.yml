@@ -3,6 +3,10 @@
 name: Lab check
 
 on:
+  pull_request:
+    branches:
+      - 'lab-10'
+      - 'lab-10-solution'
   push:
     branches:
       - 'lab-[2-9]'
