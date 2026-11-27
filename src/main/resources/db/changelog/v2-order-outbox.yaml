@@ -1,0 +1,42 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-order-outbox
+      author: be101
+      changes:
+        - createTable:
+            tableName: order_outbox
+            columns:
+              - column:
+                  name: event_id
+                  type: uuid
+                  constraints: { primaryKey: true, nullable: false }
+              - column:
+                  name: order_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    unique: true
+                    foreignKeyName: fk_outbox_order
+                    references: orders(id)
+              - column:
+                  name: customer
+                  type: varchar(100)
+                  constraints: { nullable: false }
+              - column:
+                  name: amount
+                  type: numeric(19,2)
+                  constraints: { nullable: false }
+              - column:
+                  name: published_at
+                  type: timestamp with time zone
+        - createIndex:
+            tableName: order_outbox
+            indexName: idx_outbox_pending
+            columns:
+              - column:
+                  name: published_at
+              - column:
+                  name: order_id
+      rollback:
+        - dropTable:
+            tableName: order_outbox
